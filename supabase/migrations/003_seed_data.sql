@@ -1,0 +1,57 @@
+-- ============================================================
+-- Xenith Capital CRM — Seed Data (Dev Only)
+-- Migration: 003_seed_data.sql
+-- ============================================================
+-- NOTE: Run this AFTER creating auth users via Supabase Dashboard.
+--
+-- To create the test users:
+-- 1. Go to Supabase Dashboard → Authentication → Users
+-- 2. Create user: admin@xenithcapital.co.uk / Admin1234!
+--    Add metadata: {"role": "admin", "full_name": "Xenith Admin"}
+-- 3. Create user: test.introducer@example.com / Intro1234!
+--    Add metadata: {"role": "introducer", "full_name": "James Wilson"}
+--
+-- The handle_new_user trigger will auto-create profiles.
+-- Run the UPDATE statements below to patch additional fields.
+-- ============================================================
+
+-- Patch admin profile (replace <admin-user-id> with actual UUID from auth.users)
+-- UPDATE public.profiles
+-- SET role = 'admin', full_name = 'Xenith Admin', agreement_signed = true
+-- WHERE email = 'admin@xenithcapital.co.uk';
+
+-- Patch introducer profile (pre-sign for dev convenience)
+-- UPDATE public.profiles
+-- SET
+--   role = 'introducer',
+--   full_name = 'James Wilson',
+--   agreement_signed = true,
+--   phone = '+44 7700 900000',
+--   company_name = 'Wilson Capital Introductions',
+--   tier = 'tier_1'
+-- WHERE email = 'test.introducer@example.com';
+
+-- ============================================================
+-- Example prospect (for dev testing)
+-- ============================================================
+-- INSERT INTO public.prospects (
+--   introducer_id, full_name, email, phone, country, source_note, status
+-- )
+-- SELECT
+--   p.id,
+--   'Sarah Thompson',
+--   'sarah.thompson@example.com',
+--   '+44 7700 900001',
+--   'United Kingdom',
+--   'Long-standing friend and business contact. Met at a networking event 3 years ago.',
+--   'active'
+-- FROM public.profiles p
+-- WHERE p.email = 'test.introducer@example.com'
+-- LIMIT 1;
+
+-- ============================================================
+-- SQL to manually set admin role (run in SQL editor)
+-- ============================================================
+-- UPDATE public.profiles
+-- SET role = 'admin'
+-- WHERE email = 'admin@xenithcapital.co.uk';
