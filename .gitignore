@@ -31,6 +31,9 @@ yarn-error.log*
 # Vercel
 .vercel
 
+# Local scripts with credentials — never commit
+scripts/run-create-admin.ps1
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
