@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
@@ -42,7 +42,7 @@ export default function LoginPage() {
         .from('profiles')
         .select('role, agreement_signed')
         .eq('id', user.id)
-        .single()
+        .single<{ role: string; agreement_signed: boolean }>()
 
       if (profile?.role === 'admin') {
         router.push('/admin/dashboard')
@@ -57,7 +57,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
-      {/* Header strip — navy with logo */}
       <div className="bg-[#002147] h-20 flex items-center justify-center px-8">
         <Image
           src="/logo.png"
@@ -71,7 +70,6 @@ export default function LoginPage() {
 
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
-          {/* Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-8 py-8">
               <div className="text-center mb-8">
@@ -139,5 +137,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }
