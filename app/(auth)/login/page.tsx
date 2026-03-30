@@ -38,11 +38,12 @@ function LoginForm() {
 
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const { data: profile } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('role, agreement_signed')
         .eq('id', user.id)
-        .single<{ role: string; agreement_signed: boolean }>()
+        .single()
+      const profile = profileData as { role: string; agreement_signed: boolean } | null
 
       if (profile?.role === 'admin') {
         router.push('/admin/dashboard')
