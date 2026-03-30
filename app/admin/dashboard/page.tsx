@@ -47,13 +47,13 @@ export default async function AdminDashboardPage() {
   }
 
   const pipelineStatuses = [
-    { status: 'cooling_off', label: 'Cooling Off' },
+    { status: 'cooling_off',          label: 'Cooling-Off' },
     { status: 'cooling_off_complete', label: 'Cooling-Off Complete' },
-    { status: 'education_sent', label: 'Education Sent' },
-    { status: 'handoff_pending', label: 'Handoff Pending' },
-    { status: 'onboarding', label: 'Onboarding' },
-    { status: 'funded', label: 'Funded' },
-    { status: 'active', label: 'Active' },
+    { status: 'education_sent',       label: 'Onboarding Pack Issued' },
+    { status: 'handoff_pending',      label: 'Introducer to Xenith Handoff' },
+    { status: 'onboarding',           label: 'Pelican Onboarding' },
+    { status: 'funded',               label: 'Funded' },
+    { status: 'active',               label: 'Compliant & Active' },
   ]
 
   return (

@@ -5,6 +5,7 @@ import { ProspectStatusBadge, InvestorStatusBadge } from '@/components/status-ba
 import { formatDateLondon, formatDateOnlyLondon, formatCurrency, getTierLabel } from '@/lib/utils'
 import Link from 'next/link'
 import AgreementDownloadButton from './agreement-download-button'
+import IntroducerStatusActions from './status-actions'
 
 export default async function IntroducerDetailPage({
   params,
@@ -45,6 +46,11 @@ export default async function IntroducerDetailPage({
         description={`Introducer · ${introducer.email}`}
         actions={
           <div className="flex items-center gap-2">
+            <IntroducerStatusActions
+              introducerId={params.id}
+              currentStatus={(introducer.status as 'active' | 'dormant') ?? 'active'}
+              introducerName={introducer.full_name}
+            />
             <Link
               href={`/admin/introducers/${params.id}/edit`}
               className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#5FB548] hover:bg-[#4ea038] px-4 py-2 rounded-lg transition"

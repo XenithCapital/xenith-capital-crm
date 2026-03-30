@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const serviceClient = createServiceClient()
 
     const now = new Date()
-    const coolingOffEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
+    const coolingOffEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
     const { data: prospect, error: insertError } = await serviceClient
       .from('prospects')

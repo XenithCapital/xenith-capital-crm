@@ -5,6 +5,7 @@ import { InvestorStatusBadge } from '@/components/status-badge'
 import { VestingTracker } from '@/components/investors/vesting-tracker'
 import { formatDateLondon, formatDateOnlyLondon, formatCurrency } from '@/lib/utils'
 import Link from 'next/link'
+import InvestorStatusActions from './status-actions'
 
 export default async function AdminInvestorDetailPage({
   params,
@@ -25,15 +26,24 @@ export default async function AdminInvestorDetailPage({
 
   if (error || !investor) notFound()
 
-  const { data: auditLogs } = await supabase
-    .from('audit_log')
-    .select('*')
-    .eq('target_id', params.id)
-    .order('created_at', { ascending: false })
-    .limit(20)
+  const [{ data: allocations }, { data: auditLogs }] = await Promise.all([
+    supabase
+      .from('investor_allocations')
+      .select('*')
+      .eq('investor_id', params.id)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('audit_log')
+      .select('*')
+      .eq('target_id', params.id)
+      .order('created_at', { ascending: false })
+      .limit(20),
+  ])
 
   const intro = investor.introducer as { id: string; full_name: string; email: string } | null
   const prospect = investor.prospect as { id: string; full_name: string } | null
+
+  const hasAllocations = (allocations?.length ?? 0) > 0
 
   return (
     <div className="space-y-6">
@@ -41,9 +51,19 @@ export default async function AdminInvestorDetailPage({
         title={investor.full_name}
         description="Investor Account"
         actions={
-          <Link href="/admin/investors" className="text-sm text-gray-600 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
-            ← Back
-          </Link>
+          <div className="flex items-center gap-2">
+            <InvestorStatusActions
+              investorId={params.id}
+              currentStatus={investor.status as 'active' | 'inactive' | 'withdrawn' | 'suspended'}
+              investorName={investor.full_name}
+            />
+            <Link href={`/admin/investors/${params.id}/edit`} className="text-sm bg-[#5FB548] text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#4ea038] transition">
+              Edit
+            </Link>
+            <Link href="/admin/investors" className="text-sm text-gray-600 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+              ← Back
+            </Link>
+          </div>
         }
       />
 
@@ -56,11 +76,7 @@ export default async function AdminInvestorDetailPage({
               { label: 'Full Name', value: investor.full_name },
               { label: 'Email', value: investor.email },
               { label: 'Phone', value: investor.phone ?? '—' },
-              { label: 'Account No.', value: investor.vantage_account_number ?? '—' },
-              { label: 'Strategy', value: investor.strategy ?? '—' },
-              { label: 'Account Type', value: investor.account_type ?? '—' },
-              { label: 'Funded (USD)', value: formatCurrency(investor.funded_amount_usd) },
-              { label: 'Funded Date', value: investor.funded_at ? formatDateOnlyLondon(investor.funded_at) : '—' },
+              { label: 'Total Funded', value: formatCurrency(investor.funded_amount_usd) },
               { label: 'HWM', value: formatCurrency(investor.high_water_mark) },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between">
@@ -97,13 +113,94 @@ export default async function AdminInvestorDetailPage({
           )}
         </div>
 
-        {/* Vesting + reward */}
+        {/* Right column */}
         <div className="col-span-2 space-y-4">
+
+          {/* Strategy Allocations */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <h2 className="font-bold text-[#002147] mb-4">Strategy Allocations</h2>
+            {hasAllocations ? (
+              <div className="space-y-3">
+                {allocations!.map((alloc, idx) => (
+                  <div key={alloc.id} className="border border-gray-100 rounded-lg p-4 bg-gray-50/40">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-gray-500 uppercase">
+                        {idx === 0 ? 'Primary Account' : `Account ${idx + 1}`}
+                      </span>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        alloc.referral_reward_status === 'paid'
+                          ? 'bg-green-100 text-green-700'
+                          : alloc.referral_reward_status === 'vested'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        Reward: {alloc.referral_reward_status}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 text-sm">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Strategy</p>
+                        <p className="font-medium text-gray-900">{alloc.strategy}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Account No.</p>
+                        <p className="font-medium text-gray-900">{alloc.account_number ?? '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Account Type</p>
+                        <p className="font-medium text-gray-900">{alloc.account_type ?? '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Funded (USD)</p>
+                        <p className="font-semibold text-[#002147]">{formatCurrency(alloc.funded_amount_usd)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Funded Date</p>
+                        <p className="font-medium text-gray-900">{alloc.funded_at ? formatDateOnlyLondon(alloc.funded_at) : '—'}</p>
+                      </div>
+                      {alloc.vesting_end_date && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-0.5">Vesting End</p>
+                          <p className="font-medium text-gray-900">{formatDateOnlyLondon(alloc.vesting_end_date)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Fall back to legacy single-strategy fields */
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {[
+                  { label: 'Strategy', value: investor.strategy ?? '—' },
+                  { label: 'Account No.', value: investor.vantage_account_number ?? '—' },
+                  { label: 'Account Type', value: investor.account_type ?? '—' },
+                  { label: 'Funded (USD)', value: formatCurrency(investor.funded_amount_usd) },
+                  { label: 'Funded Date', value: investor.funded_at ? formatDateOnlyLondon(investor.funded_at) : '—' },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-xs text-gray-500 mb-0.5">{label}</p>
+                    <p className="font-medium text-gray-900">{value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Vesting + reward (based on primary allocation or legacy fields) */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h2 className="font-bold text-[#002147] mb-4">Vesting & Referral Reward</h2>
             <VestingTracker
-              vestingStartDate={investor.vesting_start_date}
-              vestingEndDate={investor.vesting_end_date}
+              vestingStartDate={
+                hasAllocations
+                  ? allocations!.find((a) => a.vesting_start_date)?.vesting_start_date ?? investor.vesting_start_date
+                  : investor.vesting_start_date
+              }
+              vestingEndDate={
+                hasAllocations
+                  ? allocations!.find((a) => a.vesting_end_date)?.vesting_end_date ?? investor.vesting_end_date
+                  : investor.vesting_end_date
+              }
               referralRewardStatus={investor.referral_reward_status}
             />
             <div className="mt-4 pt-4 border-t border-gray-100">

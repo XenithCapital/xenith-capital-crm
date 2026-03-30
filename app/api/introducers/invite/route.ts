@@ -36,22 +36,24 @@ export async function POST(request: NextRequest) {
     const serviceClient = createServiceClient()
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.xenithcapital.co.uk'
 
-    // Invite user via Supabase Auth
-    const { data: inviteData, error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(
+    // Generate the invite link ourselves so we can embed it in our branded email.
+    // Using generateLink does NOT trigger Supabase's default invite email — we send ours via Resend.
+    const { data: linkData, error: inviteError } = await serviceClient.auth.admin.generateLink({
+      type: 'invite',
       email,
-      {
+      options: {
         data: {
           role: 'introducer',
           full_name: fullName,
         },
-        redirectTo: `${appUrl}/onboarding`,
-      }
-    )
+        redirectTo: `${appUrl}/auth/confirm`,
+      },
+    })
 
-    if (inviteError) {
+    if (inviteError || !linkData) {
       console.error('[invite-introducer] Invite error:', inviteError)
       return NextResponse.json(
-        { error: inviteError.message ?? 'Failed to send invitation' },
+        { error: inviteError?.message ?? 'Failed to generate invitation' },
         { status: 500 }
       )
     }
@@ -61,12 +63,12 @@ export async function POST(request: NextRequest) {
       actor_id: user.id,
       action: 'introducer.invited',
       target_type: 'profile',
-      target_id: inviteData?.user?.id ?? null,
+      target_id: linkData.user?.id ?? null,
       metadata: { email, full_name: fullName },
     })
 
-    // Send branded invite email (Supabase also sends one, but ours is branded)
-    const inviteUrl = `${appUrl}/login`
+    // Send our branded invite email with the real token link
+    const inviteUrl = linkData.properties.action_link
     await sendEmail({
       to: email,
       subject: "You've been invited to the Xenith Capital Introducer Portal",

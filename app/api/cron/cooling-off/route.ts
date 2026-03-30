@@ -4,6 +4,7 @@ import { sendEmail, ADMIN_EMAIL } from '@/lib/email/resend'
 import {
   coolingOffCompleteIntroducerEmail,
   coolingOffCompleteAdminEmail,
+  coolingOffCompleteProspectEmail,
 } from '@/lib/email/templates'
 import { formatDateLondon } from '@/lib/utils'
 
@@ -101,6 +102,18 @@ export async function GET(request: NextRequest) {
             ),
           })
         }
+
+        // Email to prospect
+        await sendEmail({
+          to: prospect.email,
+          subject: `Your Xenith Capital cooling-off period is complete`,
+          html: coolingOffCompleteProspectEmail(
+            prospect.full_name,
+            introducer?.full_name ?? 'Xenith Capital',
+            completedAtFormatted,
+            `${APP_URL}/welcome/${prospect.id}`
+          ),
+        })
 
         // Email to admin
         await sendEmail({

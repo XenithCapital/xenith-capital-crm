@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Public routes — always accessible
-  const publicRoutes = ['/login', '/unauthorised', '/api/cron']
+  const publicRoutes = ['/login', '/unauthorised', '/api/cron', '/auth/confirm']
   const isPublic = publicRoutes.some((r) => pathname.startsWith(r))
 
   if (isPublic) {
@@ -58,7 +58,8 @@ export async function updateSession(request: NextRequest) {
   const agreementSigned = profile?.agreement_signed ?? false
 
   // Introducer: must complete onboarding before accessing anything else
-  if (role === 'introducer' && !agreementSigned && pathname !== '/onboarding') {
+  // /set-password is also allowed before onboarding (invited users set their password first)
+  if (role === 'introducer' && !agreementSigned && pathname !== '/onboarding' && pathname !== '/set-password') {
     const url = request.nextUrl.clone()
     url.pathname = '/onboarding'
     return NextResponse.redirect(url)

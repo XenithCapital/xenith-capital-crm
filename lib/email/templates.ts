@@ -27,7 +27,7 @@ function emailWrapper(content: string): string {
                 XENITH CAPITAL
               </p>
               <p style="margin:4px 0 0;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:1px;text-transform:uppercase;">
-                Operations Portal
+                Introducer Portal
               </p>
             </td>
           </tr>
@@ -97,11 +97,11 @@ export function introducerInviteEmail(name: string, inviteUrl: string): string {
   <li>Raise and track support requests</li>
 </ul>
 <p style="margin:0 0 8px;color:#475569;font-size:15px;line-height:1.6;">
-  Click the button below to access the portal and complete your setup.
+  Click the button below to accept your invitation and create your password. You will then be guided through a short setup before your account is active.
 </p>
-${ctaButton(inviteUrl, 'Access Portal')}
+${ctaButton(inviteUrl, 'Accept invitation')}
 <p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
-  This invitation link is single-use and will expire after 24 hours.
+  This link is single-use and will expire after 24 hours.
   If you have any questions, contact <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>.
 </p>
   `)
@@ -290,7 +290,102 @@ ${ctaButton(ticketUrl, 'View Ticket')}
 }
 
 // ============================================================
-// 8. Support Ticket Response — Introducer
+// 8. Cooling-Off Complete — Prospect Email
+// ============================================================
+export function coolingOffCompleteProspectEmail(
+  prospectName: string,
+  introducerName: string,
+  completedAt: string,
+  welcomeUrl: string
+): string {
+  return emailWrapper(`
+<h2 style="margin:0 0 8px;color:#002147;font-size:22px;font-weight:700;">
+  Your cooling-off period is now complete
+</h2>
+<p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.6;">
+  Dear ${prospectName},
+</p>
+<p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+  Thank you for your interest in Xenith Capital. Your 24-hour regulatory cooling-off period
+  concluded at <strong>${completedAt}</strong>.
+</p>
+<p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+  <strong>${introducerName}</strong> will be in touch with you shortly to discuss the next steps,
+  including guiding you through the account opening process with our regulated brokerage partner,
+  Pelican Trading (FCA Ref: 534484).
+</p>
+<p style="margin:0 0 8px;color:#475569;font-size:14px;line-height:1.6;">
+  Your personalised onboarding page is ready — it includes our strategy overview,
+  downloadable resources, and your next steps:
+</p>
+${ctaButton(welcomeUrl, 'View Your Onboarding Page')}
+<table style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin:8px 0 20px;width:100%;" cellpadding="0" cellspacing="0">
+  <tr>
+    <td>
+      <p style="margin:0 0 6px;color:#166534;font-size:13px;font-weight:600;">Track your performance once live</p>
+      <p style="margin:0 0 10px;color:#15803d;font-size:13px;line-height:1.5;">
+        Sign up to the Xenith Capital Investor Dashboard to monitor your portfolio,
+        view strategy returns, and track your account in real time.
+      </p>
+      <a href="https://investor.xenithcapital.co.uk/" target="_blank"
+         style="display:inline-block;color:#166534;font-size:13px;font-weight:600;text-decoration:underline;">
+        investor.xenithcapital.co.uk →
+      </a>
+    </td>
+  </tr>
+</table>
+<p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
+  If you have any questions, please contact your introducer or reach us directly at
+  <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>.
+</p>
+  `)
+}
+
+// ============================================================
+// 9. Prospect Self-Registration Confirmation
+// ============================================================
+export function prospectSelfRegisteredEmail(
+  prospectName: string,
+  introducerName: string,
+  coolingOffEnds: string
+): string {
+  return emailWrapper(`
+<h2 style="margin:0 0 8px;color:#002147;font-size:22px;font-weight:700;">
+  Your interest in Xenith Capital has been registered
+</h2>
+<p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.6;">
+  Dear ${prospectName},
+</p>
+<p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+  Thank you for registering your interest in Xenith Capital via <strong>${introducerName}</strong>.
+  As required by regulation, a 24-hour cooling-off period has now started.
+</p>
+<table style="background:#fff8f0;border:1px solid #fed7aa;border-radius:8px;padding:16px 20px;margin:20px 0;width:100%;" cellpadding="0" cellspacing="0">
+  <tr>
+    <td style="padding:4px 0;color:#92400e;font-size:13px;">
+      <strong>Cooling-off ends:</strong> ${coolingOffEnds}
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:8px 0 0;color:#78350f;font-size:12px;line-height:1.5;">
+      During this period you are under no obligation to proceed. You will receive a
+      follow-up email once it concludes.
+    </td>
+  </tr>
+</table>
+<p style="margin:0 0 16px;color:#475569;font-size:14px;line-height:1.6;">
+  You can learn about our strategies and the Xenith Capital approach while you wait:
+</p>
+${ctaButton('https://xenithcapital.co.uk/strategies', 'Explore Strategies')}
+<p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
+  If you did not expect this email or wish to withdraw your interest, please contact
+  <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>.
+</p>
+  `)
+}
+
+// ============================================================
+// 10. Support Ticket Response — Introducer
 // ============================================================
 export function supportTicketResponseEmail(
   introducerName: string,

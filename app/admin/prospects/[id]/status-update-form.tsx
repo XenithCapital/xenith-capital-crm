@@ -4,26 +4,20 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ProspectStatus } from '@/types/database'
 
-const STATUSES: ProspectStatus[] = [
-  'registered', 'cooling_off', 'cooling_off_complete', 'education_sent',
-  'handoff_pending', 'handed_off', 'onboarding', 'funded', 'active',
-  'stalled', 'lost', 'rejected',
+const STATUSES: { value: ProspectStatus; label: string }[] = [
+  { value: 'registered',           label: 'Registered' },
+  { value: 'cooling_off',          label: 'Cooling-Off' },
+  { value: 'cooling_off_complete', label: 'Cooling-Off Complete' },
+  { value: 'education_sent',       label: 'Onboarding Pack Issued' },
+  { value: 'handoff_pending',      label: 'Introducer to Xenith Handoff' },
+  { value: 'handed_off',           label: 'Handed Off' },
+  { value: 'onboarding',           label: 'Pelican Onboarding' },
+  { value: 'funded',               label: 'Funded' },
+  { value: 'active',               label: 'Compliant & Active' },
+  { value: 'stalled',              label: 'Stalled' },
+  { value: 'lost',                 label: 'Lost' },
+  { value: 'rejected',             label: 'Rejected' },
 ]
-
-const STATUS_LABELS: Record<ProspectStatus, string> = {
-  registered: 'Registered',
-  cooling_off: 'Cooling Off',
-  cooling_off_complete: 'Cooling-Off Complete',
-  education_sent: 'Education Sent',
-  handoff_pending: 'Handoff Pending',
-  handed_off: 'Handed Off',
-  onboarding: 'Onboarding',
-  funded: 'Funded',
-  active: 'Active',
-  stalled: 'Stalled',
-  lost: 'Lost',
-  rejected: 'Rejected',
-}
 
 interface StatusUpdateFormProps {
   prospectId: string
@@ -41,7 +35,6 @@ export default function StatusUpdateForm({ prospectId, currentStatus }: StatusUp
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (newStatus === currentStatus) return
-
     setLoading(true)
     setError(null)
 
@@ -57,7 +50,6 @@ export default function StatusUpdateForm({ prospectId, currentStatus }: StatusUp
       setLoading(false)
       return
     }
-
     setSuccess(true)
     setLoading(false)
     router.refresh()
@@ -73,7 +65,7 @@ export default function StatusUpdateForm({ prospectId, currentStatus }: StatusUp
           className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5FB548]"
         >
           {STATUSES.map((s) => (
-            <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+            <option key={s.value} value={s.value}>{s.label}</option>
           ))}
         </select>
       </div>
@@ -89,10 +81,8 @@ export default function StatusUpdateForm({ prospectId, currentStatus }: StatusUp
           className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5FB548] resize-none"
         />
       </div>
-
       {error && <p className="text-sm text-red-600">{error}</p>}
       {success && <p className="text-sm text-green-600">Status updated successfully.</p>}
-
       <button
         type="submit"
         disabled={loading || newStatus === currentStatus || (newStatus !== currentStatus && !note)}
