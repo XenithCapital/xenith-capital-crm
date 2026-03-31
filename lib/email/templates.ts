@@ -22,9 +22,9 @@ function emailWrapper(content: string): string {
                style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
           <!-- Header -->
           <tr>
-            <td style="background:#002147;padding:20px 32px;">
-              <img src="${BASE_URL}/logo.png" alt="Xenith Capital" height="44"
-                   style="display:block;height:44px;width:auto;max-width:200px;" />
+            <td style="background:#002147;padding:24px 32px;">
+              <img src="${BASE_URL}/logo.png" alt="Xenith Capital" width="180" height="50"
+                   style="display:block;width:180px;height:auto;max-height:50px;border:0;outline:none;" />
             </td>
           </tr>
           <!-- Body -->

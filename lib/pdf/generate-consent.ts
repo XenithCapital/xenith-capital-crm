@@ -36,6 +36,20 @@ export async function generateConsentPdf(data: ConsentData): Promise<Uint8Array>
   const page = pdfDoc.addPage([pageWidth, pageHeight])
   let y = pageHeight - 50
 
+  // Try to load logo
+  type EmbeddedImage = Awaited<ReturnType<typeof pdfDoc.embedPng>>
+  let logoImage: EmbeddedImage | null = null
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const fs   = require('fs')   as typeof import('fs')
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const path = require('path') as typeof import('path')
+    const logoBytes = fs.readFileSync(path.join(process.cwd(), 'public', 'logo.png'))
+    logoImage = await pdfDoc.embedPng(logoBytes)
+  } catch {
+    // Falls back to text header
+  }
+
   // Footer
   page.drawText('Xenith Capital — SRL Partners Ltd (Co. No. 15983046) — Confidential', {
     x: margin, y: 30, size: 8, font: reg, color: LIGHT_GREY,
@@ -49,9 +63,22 @@ export async function generateConsentPdf(data: ConsentData): Promise<Uint8Array>
   })
 
   // Header bar
-  page.drawRectangle({ x: 0, y: pageHeight - 80, width: pageWidth, height: 80, color: MIDNIGHT_BLUE })
-  page.drawText('XENITH CAPITAL', { x: margin, y: pageHeight - 34, size: 16, font: bold, color: rgb(1, 1, 1) })
-  page.drawText('Prospect Consent Form', { x: margin, y: pageHeight - 52, size: 10, font: reg, color: rgb(0.8, 0.8, 0.8) })
+  const headerHeight = 80
+  page.drawRectangle({ x: 0, y: pageHeight - headerHeight, width: pageWidth, height: headerHeight, color: MIDNIGHT_BLUE })
+
+  if (logoImage) {
+    // Display logo image — scale to fit 140×36 pt bounding box
+    const maxW = 140, maxH = 36
+    const scale = Math.min(maxW / logoImage.width, maxH / logoImage.height)
+    const imgW  = logoImage.width  * scale
+    const imgH  = logoImage.height * scale
+    const imgY  = pageHeight - headerHeight + (headerHeight - imgH) / 2
+    page.drawImage(logoImage, { x: margin, y: imgY, width: imgW, height: imgH })
+  } else {
+    page.drawText('XENITH CAPITAL', { x: margin, y: pageHeight - 34, size: 16, font: bold, color: rgb(1, 1, 1) })
+  }
+
+  page.drawText('Prospect Consent Form', { x: margin, y: pageHeight - 56, size: 9, font: reg, color: rgb(0.7, 0.7, 0.7) })
   page.drawText(formatDate(data.signedAt), {
     x: pageWidth - margin - 60, y: pageHeight - 34, size: 9, font: bold, color: FERN_GREEN,
   })
