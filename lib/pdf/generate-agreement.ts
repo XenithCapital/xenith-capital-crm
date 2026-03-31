@@ -280,9 +280,25 @@ export async function generateAgreementPdf(data: AgreementData): Promise<Uint8Ar
 
   // ── SIGNATURE BLOCK ──────────────────────────────────────
   y -= 20
-  checkPageBreak(160)
+  checkPageBreak(260)
 
-  // Divider
+  // Try to load the pre-authorised company signature image
+  type EmbeddedImage = Awaited<ReturnType<typeof pdfDoc.embedPng>>
+  let companySignatureImage: EmbeddedImage | null = null
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const fs   = require('fs')   as typeof import('fs')
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const path = require('path') as typeof import('path')
+    const sigBytes = fs.readFileSync(
+      path.join(process.cwd(), 'public', 'szymon-signature.png')
+    )
+    companySignatureImage = await pdfDoc.embedPng(sigBytes)
+  } catch {
+    // Signature image not available — falls back to typed name
+  }
+
+  // Top divider
   page.drawLine({
     start: { x: margin, y },
     end: { x: pageWidth - margin, y },
@@ -291,16 +307,79 @@ export async function generateAgreementPdf(data: AgreementData): Promise<Uint8Ar
   })
   y -= 16
 
-  page.drawText('ELECTRONIC SIGNATURE RECORD', {
+  page.drawText('SIGNATURES', {
     x: margin,
     y,
     size: 9,
     font: helveticaBold,
     color: MIDNIGHT_BLUE,
   })
+  y -= 16
+
+  // Column geometry
+  const colDivX  = margin + contentWidth / 2        // centre line
+  const leftColX  = margin
+  const rightColX = colDivX + 14
+  const labelW    = 92                               // label column width
+
+  // Sub-headings
+  const subheadY = y
+  page.drawText('INTRODUCER', {
+    x: leftColX, y: subheadY, size: 8,
+    font: helveticaBold, color: LIGHT_GREY,
+  })
+  page.drawText('FOR AND ON BEHALF OF XENITH CAPITAL', {
+    x: rightColX, y: subheadY, size: 8,
+    font: helveticaBold, color: LIGHT_GREY,
+  })
   y -= 14
 
-  const sigFields: Array<[string, string]> = [
+  // ── Right column: company counter-signature ──────────────
+  let rightY = y
+  const imgDisplaySize = 110 // pts — square bounding box
+
+  if (companySignatureImage) {
+    // Scale to fit within imgDisplaySize × imgDisplaySize
+    const scale = imgDisplaySize / Math.max(companySignatureImage.width, companySignatureImage.height)
+    const imgW  = companySignatureImage.width  * scale
+    const imgH  = companySignatureImage.height * scale
+    page.drawImage(companySignatureImage, {
+      x: rightColX,
+      y: rightY - imgH,
+      width: imgW,
+      height: imgH,
+    })
+    rightY -= imgH + 6
+  } else {
+    // Fallback: italicised typed name as signature
+    page.drawText('Szymon Wloch', {
+      x: rightColX, y: rightY - 14,
+      size: 12, font: helveticaObl, color: DARK_GREY,
+    })
+    rightY -= 22
+  }
+
+  const companyFields: Array<[string, string]> = [
+    ['Signed by', 'Szymon Wloch'],
+    ['Title',     'Co-Founder & CEO'],
+    ['Company',   'SRL Partners Ltd'],
+    ['Date',      formatDate(data.signedAt)],
+  ]
+  for (const [label, value] of companyFields) {
+    page.drawText(`${label}:`, {
+      x: rightColX, y: rightY,
+      size: 9, font: helveticaBold, color: DARK_GREY,
+    })
+    page.drawText(value, {
+      x: rightColX + labelW, y: rightY,
+      size: 9, font: helvetica, color: DARK_GREY,
+    })
+    rightY -= 13
+  }
+
+  // ── Left column: introducer electronic signature record ──
+  let leftY = y
+  const introFields: Array<[string, string]> = [
     ['Signed by',        data.fullName],
     ['Date',             formatDate(data.signedAt)],
     ['Timestamp (UTC)',  data.signedAt.toISOString()],
@@ -308,28 +387,45 @@ export async function generateAgreementPdf(data: AgreementData): Promise<Uint8Ar
     ['Agreement Ver.',   data.agreementVersion ?? 'V2_March_2026'],
     ['Portal Record ID', data.recordId],
   ]
-
-  for (const [label, value] of sigFields) {
-    checkPageBreak(14)
+  const maxValueW = colDivX - leftColX - labelW - 8
+  for (const [label, value] of introFields) {
     page.drawText(`${label}:`, {
-      x: margin,
-      y,
-      size: 9,
-      font: helveticaBold,
-      color: DARK_GREY,
+      x: leftColX, y: leftY,
+      size: 9, font: helveticaBold, color: DARK_GREY,
     })
-    page.drawText(value, {
-      x: margin + 130,
-      y,
-      size: 9,
-      font: helvetica,
-      color: DARK_GREY,
+    // Truncate value if it overflows the left column
+    let display = value
+    while (display.length > 4 && helvetica.widthOfTextAtSize(display, 9) > maxValueW) {
+      display = display.slice(0, -1)
+    }
+    page.drawText(display, {
+      x: leftColX + labelW, y: leftY,
+      size: 9, font: helvetica, color: DARK_GREY,
     })
-    y -= 13
+    leftY -= 13
   }
 
+  // Vertical column divider — draw now that we know both heights
+  const colDivBottomY = Math.min(leftY, rightY) - 6
+  page.drawLine({
+    start: { x: colDivX, y: subheadY + 4 },
+    end:   { x: colDivX, y: colDivBottomY },
+    thickness: 0.5,
+    color: rgb(0.85, 0.85, 0.85),
+  })
+
+  y = colDivBottomY - 10
+
+  // Bottom divider
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: pageWidth - margin, y },
+    thickness: 0.5,
+    color: rgb(0.7, 0.7, 0.7),
+  })
+  y -= 14
+
   // Green verification box
-  y -= 8
   checkPageBreak(36)
   page.drawRectangle({
     x: margin,
