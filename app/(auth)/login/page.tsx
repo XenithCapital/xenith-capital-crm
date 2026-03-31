@@ -13,7 +13,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(
     searchParams.get('error') === 'invalid_invite'
-      ? 'This invitation link is invalid or has expired. Please contact info@xenithcapital.co.uk.'
+      ? 'For security and confidentiality reasons, this portal is accessible by invitation only. If you have received an invitation, please use the "Forgot password / Set password" link below with the email address you were invited with to set your password and gain access.'
       : searchParams.get('error') === 'account_dormant'
       ? 'Your account has been suspended. Please contact info@xenithcapital.co.uk.'
       : null

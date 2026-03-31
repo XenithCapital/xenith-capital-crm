@@ -30,6 +30,7 @@ export interface Profile {
   company_name: string | null
   linkedin_url: string | null
   agreement_signed: boolean
+  signed_agreement_version: string | null
   is_internal: boolean
   tier: IntroducerTier
   created_at: string

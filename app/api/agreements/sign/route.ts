@@ -6,6 +6,7 @@ import {
   agreementSignedIntroducerEmail,
   agreementSignedAdminEmail,
 } from '@/lib/email/templates'
+import { REQUIRED_AGREEMENT_VERSION } from '@/lib/agreement/config'
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
       signedAt,
       ipAddress,
       recordId,
-      agreementVersion: 'V2_March_2026',
+      agreementVersion: REQUIRED_AGREEMENT_VERSION,
     })
 
     // Upload PDF to Supabase storage (service role to bypass RLS issues)
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
         signed_at: signedAt.toISOString(),
         ip_address: ipAddress,
         full_name_typed: fullNameTyped,
-        agreement_version: 'V2_March_2026',
+        agreement_version: REQUIRED_AGREEMENT_VERSION,
         pdf_storage_path: pdfStoragePath,
       })
 
@@ -99,7 +100,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Update profile: set agreement_signed + optional profile fields
-    const profileUpdates: Record<string, unknown> = { agreement_signed: true }
+    const profileUpdates: Record<string, unknown> = {
+      agreement_signed: true,
+      signed_agreement_version: REQUIRED_AGREEMENT_VERSION,
+    }
     if (phone) profileUpdates.phone = phone
     if (companyName) profileUpdates.company_name = companyName
     if (linkedinUrl) profileUpdates.linkedin_url = linkedinUrl
@@ -116,7 +120,7 @@ export async function POST(request: NextRequest) {
       target_type: 'agreement',
       target_id: recordId,
       metadata: {
-        agreement_version: 'V2_March_2026',
+        agreement_version: REQUIRED_AGREEMENT_VERSION,
         ip_address: ipAddress,
         signed_at: signedAt.toISOString(),
       },
@@ -130,7 +134,7 @@ export async function POST(request: NextRequest) {
     await sendEmail({
       to: profile.email,
       subject: 'Your Introducer Agreement — Xenith Capital',
-      html: agreementSignedIntroducerEmail(profile.full_name, signedAtStr, 'V2_March_2026'),
+      html: agreementSignedIntroducerEmail(profile.full_name, signedAtStr, REQUIRED_AGREEMENT_VERSION),
       attachments: [
         {
           filename: `xenith-capital-introducer-agreement-${timestamp}.pdf`,

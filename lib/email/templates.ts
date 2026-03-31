@@ -22,13 +22,9 @@ function emailWrapper(content: string): string {
                style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
           <!-- Header -->
           <tr>
-            <td style="background:#002147;padding:24px 32px;">
-              <p style="margin:0;color:#fff;font-size:20px;font-weight:700;letter-spacing:2px;">
-                XENITH CAPITAL
-              </p>
-              <p style="margin:4px 0 0;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:1px;text-transform:uppercase;">
-                Introducer Portal
-              </p>
+            <td style="background:#002147;padding:20px 32px;">
+              <img src="${BASE_URL}/logo.png" alt="Xenith Capital" height="44"
+                   style="display:block;height:44px;width:auto;max-width:200px;" />
             </td>
           </tr>
           <!-- Body -->

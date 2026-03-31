@@ -119,15 +119,24 @@ export default function OnboardingWizard({ profile }: OnboardingWizardProps) {
         }),
       })
 
-      const data = await res.json()
+      let data: { error?: string; success?: boolean; recordId?: string } = {}
+      try {
+        data = await res.json()
+      } catch {
+        const text = await res.text().catch(() => '')
+        console.error('[handleSign] Non-JSON response:', res.status, text.slice(0, 200))
+        setError(`Server error (${res.status}) — please refresh and try again, or contact info@xenithcapital.co.uk.`)
+        return
+      }
       if (!res.ok) {
         setError(data.error ?? 'Failed to sign agreement')
         return
       }
 
       setStep(3)
-    } catch {
-      setError('An unexpected error occurred. Please try again.')
+    } catch (err) {
+      console.error('[handleSign] Network error:', err)
+      setError('Network error — please check your connection and try again.')
     } finally {
       setLoading(false)
     }

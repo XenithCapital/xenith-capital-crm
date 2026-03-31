@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
+import { REQUIRED_AGREEMENT_VERSION } from '@/lib/agreement/config'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -50,16 +51,17 @@ export async function updateSession(request: NextRequest) {
   // Fetch profile to get role + agreement_signed
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, agreement_signed')
+    .select('role, agreement_signed, signed_agreement_version')
     .eq('id', user.id)
     .single()
 
   const role = profile?.role
   const agreementSigned = profile?.agreement_signed ?? false
+  const signedVersion = profile?.signed_agreement_version ?? null
 
   // Introducer: must complete onboarding before accessing anything else
-  // /set-password is also allowed before onboarding (invited users set their password first)
-  if (role === 'introducer' && !agreementSigned && pathname !== '/onboarding' && pathname !== '/set-password') {
+  // /set-password and API routes are also allowed before onboarding
+  if (role === 'introducer' && !agreementSigned && !pathname.startsWith('/api/') && pathname !== '/onboarding' && pathname !== '/set-password') {
     const url = request.nextUrl.clone()
     url.pathname = '/onboarding'
     return NextResponse.redirect(url)
@@ -67,6 +69,32 @@ export async function updateSession(request: NextRequest) {
 
   // Prevent signed introducers from re-visiting onboarding
   if (role === 'introducer' && agreementSigned && pathname === '/onboarding') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/portal/dashboard'
+    return NextResponse.redirect(url)
+  }
+
+  // Introducer: signed but on an outdated agreement version — gate to /re-sign
+  if (
+    role === 'introducer' &&
+    agreementSigned &&
+    signedVersion !== REQUIRED_AGREEMENT_VERSION &&
+    !pathname.startsWith('/api/') &&
+    pathname !== '/re-sign' &&
+    pathname !== '/set-password'
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/re-sign'
+    return NextResponse.redirect(url)
+  }
+
+  // Prevent introducers on the current version from hitting /re-sign
+  if (
+    role === 'introducer' &&
+    agreementSigned &&
+    signedVersion === REQUIRED_AGREEMENT_VERSION &&
+    pathname === '/re-sign'
+  ) {
     const url = request.nextUrl.clone()
     url.pathname = '/portal/dashboard'
     return NextResponse.redirect(url)
