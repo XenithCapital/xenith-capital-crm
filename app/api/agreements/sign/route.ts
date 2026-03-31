@@ -60,13 +60,19 @@ export async function POST(request: NextRequest) {
     const pdfStoragePath = `${user.id}/agreement_${timestamp}.pdf`
 
     // Generate PDF
-    const pdfBytes = await generateAgreementPdf({
-      fullName: profile.full_name,
-      signedAt,
-      ipAddress,
-      recordId,
-      agreementVersion: REQUIRED_AGREEMENT_VERSION,
-    })
+    let pdfBytes: Uint8Array
+    try {
+      pdfBytes = await generateAgreementPdf({
+        fullName: profile.full_name,
+        signedAt,
+        ipAddress,
+        recordId,
+        agreementVersion: REQUIRED_AGREEMENT_VERSION,
+      })
+    } catch (pdfError) {
+      console.error('[sign-agreement] PDF generation error:', pdfError)
+      return NextResponse.json({ error: 'Failed to generate agreement PDF' }, { status: 500 })
+    }
 
     // Upload PDF to Supabase storage (service role to bypass RLS issues)
     const { error: uploadError } = await serviceClient.storage
@@ -95,7 +101,7 @@ export async function POST(request: NextRequest) {
       })
 
     if (agreementError) {
-      console.error('[sign-agreement] DB error:', agreementError)
+      console.error('[sign-agreement] DB insert error:', agreementError)
       return NextResponse.json({ error: 'Failed to save agreement record' }, { status: 500 })
     }
 
@@ -108,10 +114,15 @@ export async function POST(request: NextRequest) {
     if (companyName) profileUpdates.company_name = companyName
     if (linkedinUrl) profileUpdates.linkedin_url = linkedinUrl
 
-    await serviceClient
+    const { error: profileUpdateError } = await serviceClient
       .from('profiles')
       .update(profileUpdates)
       .eq('id', user.id)
+
+    if (profileUpdateError) {
+      console.error('[sign-agreement] Profile update error:', profileUpdateError)
+      return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+    }
 
     // Write audit log
     await serviceClient.from('audit_log').insert({
