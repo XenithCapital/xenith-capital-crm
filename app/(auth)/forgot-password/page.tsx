@@ -75,6 +75,9 @@ export default function ForgotPasswordPage() {
                     <p className="text-sm text-green-600 mt-1">
                       If <strong>{email}</strong> is registered, you'll receive a password reset link shortly.
                     </p>
+                    <p className="text-sm text-green-600 mt-2">
+                      Can't find it? Check your <strong>junk or spam folder</strong>.
+                    </p>
                   </div>
                   <Link
                     href="/login"
