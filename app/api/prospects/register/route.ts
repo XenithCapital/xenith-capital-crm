@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { sendEmail, ADMIN_EMAIL } from '@/lib/email/resend'
+import { sendEmail } from '@/lib/email/resend'
 import {
   prospectRegisteredEmail,
+  prospectConsentRequestEmail,
 } from '@/lib/email/templates'
-import { formatDateLondon } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,10 +40,8 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceClient = createServiceClient()
-    const now = new Date()
-    const coolingOffCompleted = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
-    // Insert prospect (trigger will set cooling_off timestamps)
+    // Insert prospect with pending_consent status — cooling-off does NOT start yet
     const { data: prospect, error: insertError } = await serviceClient
       .from('prospects')
       .insert({
@@ -53,7 +51,7 @@ export async function POST(request: NextRequest) {
         phone,
         country,
         source_note: sourceNote,
-        status: 'cooling_off',
+        status: 'pending_consent',
       })
       .select()
       .single()
@@ -68,8 +66,8 @@ export async function POST(request: NextRequest) {
       prospect_id: prospect.id,
       changed_by: user.id,
       old_status: null,
-      new_status: 'cooling_off',
-      note: 'Prospect registered via portal. Cooling-off period started automatically.',
+      new_status: 'pending_consent',
+      note: 'Prospect registered via introducer portal. Consent email sent to prospect.',
     })
 
     // Write audit log
@@ -82,24 +80,29 @@ export async function POST(request: NextRequest) {
         full_name: fullName,
         email,
         country,
-        cooling_off_started: prospect.cooling_off_started_at,
-        cooling_off_completes: prospect.cooling_off_completed_at,
+        status: 'pending_consent',
       },
     })
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://partners.xenithcapital.co.uk'
-    const startedAt = formatDateLondon(prospect.cooling_off_started_at ?? now.toISOString())
-    const completedAt = formatDateLondon(prospect.cooling_off_completed_at ?? coolingOffCompleted.toISOString())
+    const consentUrl = `${appUrl}/prospect/consent/${prospect.consent_token}`
 
-    // Send confirmation email to introducer
+    // Send consent request email to prospect
+    await sendEmail({
+      to: email,
+      subject: 'Action Required — Confirm Your Interest in Xenith Capital',
+      html: prospectConsentRequestEmail(fullName, profile.full_name, consentUrl),
+    })
+
+    // Notify introducer
     await sendEmail({
       to: profile.email,
       subject: `Prospect registered — ${fullName}`,
       html: prospectRegisteredEmail(
         profile.full_name,
         fullName,
-        startedAt,
-        completedAt,
+        null,
+        null,
         `${appUrl}/portal/prospects/${prospect.id}`
       ),
     })

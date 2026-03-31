@@ -2,6 +2,7 @@ export type UserRole = 'admin' | 'introducer'
 export type IntroducerTier = 'tier_1' | 'tier_2' | 'tier_3'
 
 export type ProspectStatus =
+  | 'pending_consent'
   | 'registered'
   | 'cooling_off'
   | 'cooling_off_complete'
@@ -79,6 +80,10 @@ export interface Prospect {
   status: ProspectStatus
   cooling_off_started_at: string | null
   cooling_off_completed_at: string | null
+  consent_token: string | null
+  consent_signed_at: string | null
+  consent_ip_address: string | null
+  consent_pdf_path: string | null
   notes: string | null
   created_at: string
   updated_at: string

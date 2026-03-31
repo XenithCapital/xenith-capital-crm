@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/layout/page-header'
 import Link from 'next/link'
 
@@ -14,7 +13,6 @@ const COUNTRIES = [
 ]
 
 export default function NewProspectPage() {
-  const router = useRouter()
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -24,7 +22,7 @@ export default function NewProspectPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<{ prospectId: string; fullName: string } | null>(null)
+  const [success, setSuccess] = useState<{ prospectId: string; fullName: string; email: string } | null>(null)
 
   function set(key: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
@@ -55,7 +53,7 @@ export default function NewProspectPage() {
       return
     }
 
-    setSuccess({ prospectId: data.prospect.id, fullName: form.fullName })
+    setSuccess({ prospectId: data.prospect.id, fullName: form.fullName, email: form.email })
     setLoading(false)
   }
 
@@ -63,22 +61,22 @@ export default function NewProspectPage() {
     return (
       <div>
         <PageHeader title="Prospect Registered" />
-        <div className="bg-white rounded-xl border border-gray-200 p-10 max-w-lg">
+        <div className="bg-white rounded-xl border border-gray-200 p-8 sm:p-10 max-w-lg">
           <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
             <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <h2 className="text-xl font-bold text-[#002147] mb-3">Prospect registered successfully</h2>
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-            <p className="text-sm font-semibold text-amber-900 mb-1">24-hour cooling-off period started</p>
-            <p className="text-sm text-amber-800">
-              The mandatory 24-hour cooling-off period for <strong>{success.fullName}</strong> has
-              started automatically. You will receive an email notification when it concludes and
-              you can proceed to the next stage.
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-sm font-semibold text-blue-900 mb-1">Consent email sent</p>
+            <p className="text-sm text-blue-800">
+              A consent request email has been sent to <strong>{success.fullName}</strong> at{' '}
+              <strong>{success.email}</strong>. The 24-hour cooling-off period will begin only after
+              they confirm their interest via the link in that email.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               href={`/portal/prospects/${success.prospectId}`}
               className="bg-[#5FB548] text-white font-semibold px-4 py-2.5 rounded-lg hover:bg-[#4ea038] transition text-sm"
@@ -86,7 +84,10 @@ export default function NewProspectPage() {
               View Prospect
             </Link>
             <button
-              onClick={() => { setSuccess(null); setForm({ fullName: '', email: '', phone: '', country: '', sourceNote: '' }) }}
+              onClick={() => {
+                setSuccess(null)
+                setForm({ fullName: '', email: '', phone: '', country: '', sourceNote: '' })
+              }}
               className="text-sm text-gray-600 px-4 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
             >
               Register Another
@@ -111,15 +112,16 @@ export default function NewProspectPage() {
 
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 max-w-2xl">
         <p className="text-sm text-amber-800">
-          <strong>Important:</strong> A 24-hour regulatory cooling-off period will start automatically
-          when you submit this form. Ensure you have a genuine pre-existing relationship with this person
-          before registering them. Speculative bulk registrations are prohibited under your Introducer Agreement.
+          <strong>Important:</strong> After submitting, your prospect will receive an email asking them
+          to confirm their interest. The mandatory 24-hour regulatory cooling-off period will only start
+          once they confirm. Ensure you have a genuine pre-existing relationship with this person before
+          registering them. Speculative bulk registrations are prohibited under your Introducer Agreement.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-2xl">
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full legal name <span className="text-red-500">*</span></label>
               <input type="text" value={form.fullName} onChange={set('fullName')} required
@@ -176,7 +178,7 @@ export default function NewProspectPage() {
             disabled={loading}
             className="bg-[#5FB548] hover:bg-[#4ea038] text-white font-semibold px-6 py-3 rounded-lg transition disabled:opacity-40 text-sm"
           >
-            {loading ? 'Registering…' : 'Register Prospect & Start Cooling-Off'}
+            {loading ? 'Registering…' : 'Register Prospect & Send Consent Email'}
           </button>
         </div>
       </form>

@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import type { ProspectStatus, InvestorStatus, TicketStatus, TicketPriority } from '@/types/database'
 
 const prospectStatusConfig: Record<ProspectStatus, { label: string; className: string }> = {
+  pending_consent:       { label: 'Awaiting Consent',              className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   registered:            { label: 'Registered',                    className: 'bg-gray-100 text-gray-700 border-gray-200' },
   cooling_off:           { label: 'Cooling-Off',                   className: 'bg-amber-100 text-amber-800 border-amber-200' },
   cooling_off_complete:  { label: 'Cooling-Off Complete',          className: 'bg-blue-100 text-blue-700 border-blue-200' },

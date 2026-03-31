@@ -231,8 +231,8 @@ ${ctaButton(adminProspectUrl, 'View Prospect Record')}
 export function prospectRegisteredEmail(
   introducerName: string,
   prospectName: string,
-  coolingOffStartedAt: string,
-  coolingOffCompletedAt: string,
+  _coolingOffStartedAt: string | null,
+  _coolingOffCompletedAt: string | null,
   prospectUrl: string
 ): string {
   return emailWrapper(`
@@ -246,15 +246,15 @@ export function prospectRegisteredEmail(
   Your prospect <strong>${prospectName}</strong> has been successfully registered in the
   Xenith Capital Introducer Portal.
 </p>
-<table style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin:20px 0;width:100%;" cellpadding="0" cellspacing="0">
-  <tr><td style="padding:4px 0;color:#64748b;font-size:13px;">Cooling-off Started</td><td style="padding:4px 0;color:#002147;font-size:13px;font-weight:600;">${coolingOffStartedAt}</td></tr>
-  <tr><td style="padding:4px 0;color:#64748b;font-size:13px;">Cooling-off Completes</td><td style="padding:4px 0;color:#002147;font-size:13px;font-weight:600;">${coolingOffCompletedAt} (approx.)</td></tr>
+<table style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin:20px 0;width:100%;" cellpadding="0" cellspacing="0">
+  <tr>
+    <td style="color:#166534;font-size:13px;line-height:1.6;">
+      <strong>Next step:</strong> A consent request email has been sent to your prospect.
+      Once they confirm their interest, the mandatory 24-hour cooling-off period will begin
+      automatically, and you will receive a notification.
+    </td>
+  </tr>
 </table>
-<p style="margin:0 0 16px;color:#475569;font-size:14px;line-height:1.6;">
-  <strong>Important:</strong> The 24-hour regulatory cooling-off period has started automatically.
-  You will receive an email notification when it concludes and you are able to proceed to the
-  next stage.
-</p>
 ${ctaButton(prospectUrl, 'View in portal')}
   `)
 }
@@ -343,45 +343,109 @@ ${ctaButton(welcomeUrl, 'View Your Onboarding Page')}
 export function prospectSelfRegisteredEmail(
   prospectName: string,
   introducerName: string,
-  coolingOffEnds: string
+  _coolingOffEnds: string | null
 ): string {
   return emailWrapper(`
 <h2 style="margin:0 0 8px;color:#002147;font-size:22px;font-weight:700;">
-  Your interest in Xenith Capital has been registered
+  New prospect registered — ${prospectName}
 </h2>
 <p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.6;">
-  Dear ${prospectName},
+  Hello ${introducerName},
 </p>
 <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
-  Thank you for registering your interest in Xenith Capital via <strong>${introducerName}</strong>.
-  As required by regulation, a 24-hour cooling-off period has now started.
+  Your prospect <strong>${prospectName}</strong> has self-registered via your referral link.
 </p>
-<table style="background:#fff8f0;border:1px solid #fed7aa;border-radius:8px;padding:16px 20px;margin:20px 0;width:100%;" cellpadding="0" cellspacing="0">
+<table style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin:20px 0;width:100%;" cellpadding="0" cellspacing="0">
   <tr>
-    <td style="padding:4px 0;color:#92400e;font-size:13px;">
-      <strong>Cooling-off ends:</strong> ${coolingOffEnds}
-    </td>
-  </tr>
-  <tr>
-    <td style="padding:8px 0 0;color:#78350f;font-size:12px;line-height:1.5;">
-      During this period you are under no obligation to proceed. You will receive a
-      follow-up email once it concludes.
+    <td style="color:#166534;font-size:13px;line-height:1.6;">
+      <strong>Next step:</strong> A consent request email has been sent to your prospect.
+      Once they confirm their interest, the mandatory 24-hour cooling-off period will begin
+      automatically, and you will receive a notification.
     </td>
   </tr>
 </table>
-<p style="margin:0 0 16px;color:#475569;font-size:14px;line-height:1.6;">
-  You can learn about our strategies and the Xenith Capital approach while you wait:
-</p>
-${ctaButton('https://xenithcapital.co.uk/strategies', 'Explore Strategies')}
 <p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
-  If you did not expect this email or wish to withdraw your interest, please contact
-  <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>.
+  If you have any questions, contact <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>.
 </p>
   `)
 }
 
 // ============================================================
-// 10. Support Ticket Response — Introducer
+// 10. Prospect Consent Request
+// ============================================================
+export function prospectConsentRequestEmail(
+  prospectName: string,
+  introducerName: string,
+  consentUrl: string
+): string {
+  return emailWrapper(`
+<h2 style="margin:0 0 8px;color:#002147;font-size:22px;font-weight:700;">
+  Action Required: Confirm Your Interest in Xenith Capital
+</h2>
+<p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.6;">
+  Dear ${prospectName},
+</p>
+<p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+  <strong>${introducerName}</strong> has submitted your details to the Xenith Capital Introducer Portal, registering your interest in our managed trading strategy service.
+</p>
+<p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+  Before we can formally register your interest and begin the required regulatory process, we need you to confirm your consent. This is a necessary step under FCA guidance.
+</p>
+<table style="background:#fff8f0;border:1px solid #fed7aa;border-radius:8px;padding:16px 20px;margin:20px 0;width:100%;" cellpadding="0" cellspacing="0">
+  <tr>
+    <td style="color:#92400e;font-size:13px;line-height:1.6;">
+      <strong>What happens when you confirm:</strong><br/>
+      A mandatory 24-hour regulatory cooling-off period will start. During this period you are under <strong>no obligation</strong> to invest or take any further action. You will receive a confirmation email with a record of your consent.
+    </td>
+  </tr>
+</table>
+<p style="margin:0 0 8px;color:#475569;font-size:15px;line-height:1.6;">
+  Click the button below to review the terms and confirm your interest:
+</p>
+${ctaButton(consentUrl, 'Confirm My Interest')}
+<p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
+  This link is unique to you and can only be used once. If you did not expect this email or do not wish to proceed, please ignore it — no action will be taken.
+  For questions, contact <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>.
+</p>
+  `)
+}
+
+// ============================================================
+// 11. Prospect Consent Confirmed (with PDF attachment)
+// ============================================================
+export function prospectConsentConfirmedEmail(
+  prospectName: string,
+  introducerName: string,
+  coolingOffEnds: string
+): string {
+  return emailWrapper(`
+<h2 style="margin:0 0 8px;color:#002147;font-size:22px;font-weight:700;">
+  Cooling-Off Period Started — Xenith Capital
+</h2>
+<p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.6;">
+  Dear ${prospectName},
+</p>
+<p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+  Thank you for confirming your interest in Xenith Capital via <strong>${introducerName}</strong>.
+  Your 24-hour regulatory cooling-off period has now started.
+</p>
+<table style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin:20px 0;width:100%;" cellpadding="0" cellspacing="0">
+  <tr><td style="padding:4px 0;color:#64748b;font-size:13px;">Cooling-off ends</td><td style="padding:4px 0;color:#002147;font-size:13px;font-weight:600;">${coolingOffEnds}</td></tr>
+  <tr><td style="padding:8px 0 0;color:#64748b;font-size:13px;" colspan="2">During this period you are under <strong>no obligation</strong> to invest or proceed further. A signed copy of your consent form is attached to this email for your records.</td></tr>
+</table>
+<p style="margin:0 0 16px;color:#475569;font-size:14px;line-height:1.6;">
+  You will receive a follow-up email from us once the cooling-off period concludes.
+  In the meantime, you are welcome to learn more about our strategies:
+</p>
+${ctaButton('https://xenithcapital.co.uk/strategies', 'Explore Strategies')}
+<p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
+  If you have any questions, please contact <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>.
+</p>
+  `)
+}
+
+// ============================================================
+// 12. Support Ticket Response — Introducer
 // ============================================================
 export function supportTicketResponseEmail(
   introducerName: string,

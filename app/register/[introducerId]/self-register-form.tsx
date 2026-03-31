@@ -14,21 +14,19 @@ interface Props {
 }
 
 export default function ProspectSelfRegisterForm({ introducerId, introducerName }: Props) {
-  const [form, setForm] = useState({ fullName: '', email: '', phone: '', country: '', consent: false })
+  const [form, setForm] = useState({ fullName: '', email: '', phone: '', country: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState<{ endsAt: string } | null>(null)
+  const [done, setDone] = useState<{ email: string } | null>(null)
 
   function set(key: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      const val = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value
-      setForm((f) => ({ ...f, [key]: val }))
+      setForm((f) => ({ ...f, [key]: e.target.value }))
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.consent) { setError('You must confirm your consent to proceed.'); return }
     setLoading(true)
     setError(null)
 
@@ -46,7 +44,7 @@ export default function ProspectSelfRegisterForm({ introducerId, introducerName 
 
     const data = await res.json()
     if (!res.ok) { setError(data.error ?? 'Registration failed. Please try again.'); setLoading(false); return }
-    setDone({ endsAt: data.coolingOffEndsAt })
+    setDone({ email: form.email })
     setLoading(false)
   }
 
@@ -58,22 +56,30 @@ export default function ProspectSelfRegisterForm({ introducerId, introducerName 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-[#002147] mb-2">You're registered</h2>
+        <h2 className="text-xl font-bold text-[#002147] mb-2">Almost there — check your email</h2>
         <p className="text-gray-600 text-sm mb-4">
-          A confirmation email has been sent to <strong>{form.email}</strong>.
+          We've sent a consent confirmation link to <strong>{done.email}</strong>.
         </p>
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-          Your 24-hour cooling-off period ends at approximately <strong>{new Date(done.endsAt).toLocaleString('en-GB', { dateStyle: 'full', timeStyle: 'short' })}</strong>.
-          You will receive an email when it concludes.
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 text-left">
+          <p className="font-semibold mb-1">What happens next?</p>
+          <ol className="list-decimal list-inside space-y-1 text-blue-700">
+            <li>Open the email from Xenith Capital.</li>
+            <li>Click the confirmation link to review the terms and sign.</li>
+            <li>Once confirmed, your 24-hour cooling-off period will begin.</li>
+          </ol>
         </div>
+        <p className="text-xs text-gray-400 mt-4">
+          If you don't see the email, check your spam folder or contact{' '}
+          <a href="mailto:info@xenithcapital.co.uk" className="text-[#5FB548] underline">info@xenithcapital.co.uk</a>.
+        </p>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
+    <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Full Legal Name <span className="text-red-500">*</span></label>
           <input type="text" value={form.fullName} onChange={set('fullName')} required
             className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5FB548]" />
@@ -88,7 +94,7 @@ export default function ProspectSelfRegisterForm({ introducerId, introducerName 
           <input type="tel" value={form.phone} onChange={set('phone')} required placeholder="+44 7700 900000"
             className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5FB548]" />
         </div>
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Country of Residence <span className="text-red-500">*</span></label>
           <select value={form.country} onChange={set('country')} required
             className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5FB548]">
@@ -98,21 +104,17 @@ export default function ProspectSelfRegisterForm({ introducerId, introducerName 
         </div>
       </div>
 
-      <div className="flex items-start gap-3 pt-1">
-        <input type="checkbox" id="consent" checked={form.consent} onChange={set('consent')}
-          className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#5FB548] focus:ring-[#5FB548]" />
-        <label htmlFor="consent" className="text-sm text-gray-600 cursor-pointer leading-relaxed">
-          I confirm that I have a pre-existing relationship with <strong>{introducerName}</strong>, I am
-          registering my genuine interest in Xenith Capital, and I understand that a 24-hour
-          cooling-off period will begin immediately upon submission.
-        </label>
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 leading-relaxed">
+        By submitting, you confirm that you have a pre-existing relationship with{' '}
+        <strong>{introducerName}</strong> and are registering your genuine interest in Xenith Capital.
+        You will receive an email to formally confirm your consent before any cooling-off period begins.
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <button type="submit" disabled={loading || !form.consent}
+      <button type="submit" disabled={loading}
         className="w-full bg-[#5FB548] hover:bg-[#4ea038] text-white font-semibold py-3 rounded-lg transition disabled:opacity-40 text-sm">
-        {loading ? 'Registering…' : 'Register Interest & Start Cooling-Off'}
+        {loading ? 'Submitting…' : 'Submit Registration'}
       </button>
     </form>
   )

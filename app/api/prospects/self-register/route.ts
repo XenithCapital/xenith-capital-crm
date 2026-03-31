@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/resend'
-import { prospectSelfRegisteredEmail } from '@/lib/email/templates'
-import { formatDateLondon } from '@/lib/utils'
+import {
+  prospectConsentRequestEmail,
+  prospectSelfRegisteredEmail,
+} from '@/lib/email/templates'
 
 // Public endpoint — no auth required. Prospect self-registers via introducer link.
 export async function POST(request: NextRequest) {
@@ -28,9 +30,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid registration link' }, { status: 404 })
     }
 
-    const now = new Date()
-    const coolingOffEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000)
-
+    // Insert prospect with pending_consent status — cooling-off does NOT start yet
     const { data: prospect, error: insertError } = await serviceClient
       .from('prospects')
       .insert({
@@ -40,9 +40,7 @@ export async function POST(request: NextRequest) {
         phone,
         country,
         source_note: 'Self-registered via introducer link',
-        status: 'cooling_off',
-        cooling_off_started_at: now.toISOString(),
-        cooling_off_completed_at: coolingOffEnd.toISOString(),
+        status: 'pending_consent',
       })
       .select()
       .single()
@@ -56,8 +54,8 @@ export async function POST(request: NextRequest) {
       prospect_id: prospect.id,
       changed_by: introducerId,
       old_status: null,
-      new_status: 'cooling_off',
-      note: 'Prospect self-registered via public introducer link.',
+      new_status: 'pending_consent',
+      note: 'Prospect self-registered via public introducer link. Consent email sent.',
     })
 
     await serviceClient.from('audit_log').insert({
@@ -65,29 +63,29 @@ export async function POST(request: NextRequest) {
       action: 'prospect.self_registered',
       target_type: 'prospect',
       target_id: prospect.id,
-      metadata: { full_name: fullName, email, country },
+      metadata: { full_name: fullName, email, country, status: 'pending_consent' },
     })
 
-    const endsFormatted = formatDateLondon(coolingOffEnd.toISOString())
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://partners.xenithcapital.co.uk'
+    const consentUrl = `${appUrl}/prospect/consent/${prospect.consent_token}`
 
-    // Email to prospect
+    // Send consent request email to prospect
     await sendEmail({
       to: email,
-      subject: 'Your interest in Xenith Capital — cooling-off period started',
-      html: prospectSelfRegisteredEmail(fullName, introducer.full_name, endsFormatted),
+      subject: 'Action Required — Confirm Your Interest in Xenith Capital',
+      html: prospectConsentRequestEmail(fullName, introducer.full_name, consentUrl),
     })
 
     // Notify introducer
     await sendEmail({
       to: introducer.email,
-      subject: `New self-registered prospect — ${fullName}`,
-      html: `<p>Your prospect <strong>${fullName}</strong> (${email}) has self-registered via your link. Cooling-off ends: ${endsFormatted}.</p>`,
+      subject: `New prospect registered — ${fullName}`,
+      html: prospectSelfRegisteredEmail(fullName, introducer.full_name, null),
     })
 
     return NextResponse.json({
       success: true,
       prospectId: prospect.id,
-      coolingOffEndsAt: coolingOffEnd.toISOString(),
     })
   } catch (err) {
     console.error('[self-register] Unexpected:', err)
