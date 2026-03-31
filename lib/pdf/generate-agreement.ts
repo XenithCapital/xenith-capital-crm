@@ -436,7 +436,7 @@ export async function generateAgreementPdf(data: AgreementData): Promise<Uint8Ar
     borderColor: FERN_GREEN,
     borderWidth: 0.5,
   })
-  page.drawText('✓  This document was electronically signed via the Xenith Capital Introducer Portal', {
+  page.drawText('Electronically signed via the Xenith Capital Introducer Portal', {
     x: margin + 10,
     y: y - 6,
     size: 8,
