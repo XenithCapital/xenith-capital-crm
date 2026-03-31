@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type') as 'invite' | 'recovery' | 'email' | null
+  const next = searchParams.get('next')
 
   if (tokenHash && type) {
     const supabase = await createClient()
@@ -15,12 +16,16 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
 
     if (!error) {
+      if (type === 'recovery') {
+        // Password reset: send to set-password page
+        return NextResponse.redirect(`${origin}/set-password`)
+      }
       if (type === 'invite') {
         // First-time invite: user is now logged in but has no password — send to set-password
         return NextResponse.redirect(`${origin}/set-password`)
       }
-      // Other types (recovery etc.) go straight to onboarding/dashboard
-      return NextResponse.redirect(`${origin}/onboarding`)
+      // Use explicit next param or fall back to onboarding
+      return NextResponse.redirect(`${origin}${next ?? '/onboarding'}`)
     }
 
     console.error('[auth/confirm] OTP verification failed:', error.message)

@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.xenithcapital.co.uk'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://partners.xenithcapital.co.uk'
     const startedAt = formatDateLondon(prospect.cooling_off_started_at ?? now.toISOString())
     const completedAt = formatDateLondon(prospect.cooling_off_completed_at ?? coolingOffCompleted.toISOString())
 

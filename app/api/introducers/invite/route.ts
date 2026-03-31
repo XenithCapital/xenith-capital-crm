@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceClient = createServiceClient()
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.xenithcapital.co.uk'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://partners.xenithcapital.co.uk'
 
     // Generate the invite link ourselves so we can embed it in our branded email.
     // Using generateLink does NOT trigger Supabase's default invite email — we send ours via Resend.

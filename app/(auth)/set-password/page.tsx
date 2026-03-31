@@ -35,8 +35,25 @@ export default function SetPasswordPage() {
       return
     }
 
-    // Password set — proceed to onboarding
-    router.push('/onboarding')
+    // Redirect based on role
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, agreement_signed')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.role === 'admin') {
+        router.push('/admin/dashboard')
+      } else if (!profile?.agreement_signed) {
+        router.push('/onboarding')
+      } else {
+        router.push('/portal/dashboard')
+      }
+    } else {
+      router.push('/login')
+    }
   }
 
   return (

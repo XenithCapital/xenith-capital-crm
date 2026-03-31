@@ -8,7 +8,7 @@ import {
 } from '@/lib/email/templates'
 import { formatDateLondon } from '@/lib/utils'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.xenithcapital.co.uk'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://partners.xenithcapital.co.uk'
 
 export async function GET(request: NextRequest) {
   // Verify cron secret

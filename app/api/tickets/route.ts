@@ -7,7 +7,7 @@ import {
 } from '@/lib/email/templates'
 import type { TicketPriority } from '@/types/database'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.xenithcapital.co.uk'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://partners.xenithcapital.co.uk'
 
 // POST: Create a new ticket
 export async function POST(request: NextRequest) {

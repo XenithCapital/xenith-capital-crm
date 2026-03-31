@@ -3,7 +3,7 @@
 // All emails: Midnight Blue header, white body, Fern Green CTAs
 // ============================================================
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.xenithcapital.co.uk'
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://partners.xenithcapital.co.uk'
 
 function emailWrapper(content: string): string {
   return `

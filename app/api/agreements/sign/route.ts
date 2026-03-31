@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Send emails
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.xenithcapital.co.uk'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://partners.xenithcapital.co.uk'
     const signedAtStr = signedAt.toISOString()
 
     // To introducer (with PDF attached)
