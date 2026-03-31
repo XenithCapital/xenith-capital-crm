@@ -6,6 +6,7 @@ import { CoolingOffCountdown } from '@/components/prospects/cooling-off-countdow
 import { formatDateLondon, formatDateOnlyLondon } from '@/lib/utils'
 import Link from 'next/link'
 import StatusUpdateForm from './status-update-form'
+import DeleteProspectButton from './delete-prospect-button'
 
 export default async function AdminProspectDetailPage({
   params,
@@ -54,6 +55,7 @@ export default async function AdminProspectDetailPage({
                 Create Investor Record
               </Link>
             )}
+            <DeleteProspectButton prospectId={prospect.id} prospectName={prospect.full_name} />
             <Link href="/admin/prospects" className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 border border-gray-200 rounded-lg transition">
               ← Back
             </Link>
