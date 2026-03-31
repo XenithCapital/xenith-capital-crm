@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-export const FROM_ADDRESS = 'noreply@xenithcapital.co.uk'
+export const FROM_ADDRESS = 'noreply@notify.xenithcapital.co.uk'
 export const REPLY_TO = 'info@xenithcapital.co.uk'
 export const ADMIN_EMAIL = 'info@xenithcapital.co.uk'
 
