@@ -23,8 +23,8 @@ function emailWrapper(content: string): string {
           <!-- Header -->
           <tr>
             <td style="background:#002147;padding:24px 32px;">
-              <img src="${BASE_URL}/logo.png" alt="Xenith Capital" width="180" height="50"
-                   style="display:block;width:180px;height:auto;max-height:50px;border:0;outline:none;" />
+              <img src="${BASE_URL}/logo.png" alt="Xenith Capital" width="180"
+                   style="display:block;width:180px;height:auto;border:0;outline:none;" />
             </td>
           </tr>
           <!-- Body -->
@@ -445,7 +445,167 @@ ${ctaButton('https://xenithcapital.co.uk/strategies', 'Explore Strategies')}
 }
 
 // ============================================================
-// 12. Support Ticket Response — Introducer
+// 12. Prospect Status Update — Introducer notification
+// ============================================================
+export function prospectStatusUpdateEmail(
+  introducerName: string,
+  prospectName: string,
+  prospectRef: string | null,
+  oldStatusLabel: string,
+  newStatusLabel: string,
+  adminNote: string | null,
+  portalUrl: string
+): string {
+  const refLine = prospectRef
+    ? `<span style="font-family:monospace;font-weight:700;color:#002147;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${prospectRef}</span>`
+    : ''
+
+  return emailWrapper(`
+<h2 style="margin:0 0 8px;color:#002147;font-size:22px;font-weight:700;">
+  Prospect Update
+</h2>
+<p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.6;">
+  Hello ${introducerName},
+</p>
+<p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+  There has been a status update for your prospect${prospectRef ? ` ${refLine}` : ''}:
+</p>
+<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin:0 0 20px;">
+  <p style="margin:0 0 12px;font-size:16px;font-weight:700;color:#002147;">${prospectName}</p>
+  <table cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
+    <tr>
+      <td style="width:50%;padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:6px 0 0 6px;">
+        <p style="margin:0 0 2px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">From</p>
+        <p style="margin:0;font-size:14px;font-weight:600;color:#64748b;">${oldStatusLabel}</p>
+      </td>
+      <td style="width:8px;text-align:center;color:#94a3b8;font-size:18px;padding:0 4px;">→</td>
+      <td style="width:50%;padding:8px 12px;background:#5FB548;border:1px solid #5FB548;border-radius:0 6px 6px 0;">
+        <p style="margin:0 0 2px;font-size:10px;font-weight:600;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:0.05em;">To</p>
+        <p style="margin:0;font-size:14px;font-weight:700;color:#fff;">${newStatusLabel}</p>
+      </td>
+    </tr>
+  </table>
+${adminNote ? `
+  <div style="margin-top:12px;padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;border-left:3px solid #5FB548;">
+    <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Note from Xenith Capital</p>
+    <p style="margin:0;font-size:14px;color:#475569;line-height:1.5;">${adminNote}</p>
+  </div>` : ''}
+</div>
+${ctaButton(portalUrl, 'View Prospect in Portal')}
+<p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
+  Questions? Contact us at
+  <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>
+</p>
+  `)
+}
+
+// ============================================================
+// 13. Admin Invite
+// ============================================================
+export function adminInviteEmail(name: string, inviteUrl: string): string {
+  return emailWrapper(`
+<h2 style="margin:0 0 8px;color:#002147;font-size:22px;font-weight:700;">
+  You've been added as an admin
+</h2>
+<p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.6;">
+  Hello ${name},
+</p>
+<p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+  You have been granted administrator access to the Xenith Capital Operations Portal.
+  Click the button below to set your password and log in.
+</p>
+${ctaButton(inviteUrl, 'Set Password & Log In')}
+<p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
+  This link expires in 24 hours. If you did not expect this invitation, please contact
+  <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a> immediately.
+</p>
+  `)
+}
+
+// ============================================================
+// 14. Commission Invoice Request — Introducer
+// ============================================================
+export function commissionInvoiceRequestEmail(
+  introducerName: string,
+  investorName: string,
+  periodLabel: string,
+  amountGbp: number,
+  notes: string | null,
+  portalUrl: string
+): string {
+  const formatted = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amountGbp)
+  return emailWrapper(`
+<h2 style="margin:0 0 8px;color:#002147;font-size:22px;font-weight:700;">
+  Invoice Request — Commission Payment
+</h2>
+<p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.6;">
+  Hello ${introducerName},
+</p>
+<p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+  A commission payment is ready to be processed for the following period.
+  Please raise an invoice addressed to <strong>SRL Partners Ltd</strong> for the amount below
+  and send it to <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>.
+</p>
+<table style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin:20px 0;width:100%;" cellpadding="0" cellspacing="0">
+  <tr><td style="padding:4px 0;color:#64748b;font-size:13px;">Investor Account</td><td style="padding:4px 0;color:#002147;font-size:13px;font-weight:600;">${investorName}</td></tr>
+  <tr><td style="padding:4px 0;color:#64748b;font-size:13px;">Billing Period</td><td style="padding:4px 0;color:#002147;font-size:13px;font-weight:600;">${periodLabel}</td></tr>
+  <tr><td style="padding:8px 0 4px;color:#64748b;font-size:13px;border-top:1px solid #e2e8f0;">Commission Due</td>
+      <td style="padding:8px 0 4px;color:#5FB548;font-size:18px;font-weight:700;border-top:1px solid #e2e8f0;">${formatted}</td></tr>
+</table>
+${notes ? `
+<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #5FB548;border-radius:6px;padding:12px 16px;margin:0 0 20px;">
+  <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Note from Xenith Capital</p>
+  <p style="margin:0;font-size:14px;color:#475569;line-height:1.5;">${notes}</p>
+</div>` : ''}
+<p style="margin:0 0 16px;color:#475569;font-size:14px;line-height:1.6;">
+  Please reference your introducer reference number on the invoice. Once your invoice is received we will process payment promptly.
+</p>
+${ctaButton(portalUrl, 'View in Partner Portal')}
+<p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
+  Invoice queries? Contact us at
+  <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>
+</p>
+  `)
+}
+
+// ============================================================
+// 15. Commission Paid — Introducer Notification
+// ============================================================
+export function commissionPaidEmail(
+  introducerName: string,
+  investorName: string,
+  periodLabel: string,
+  amountGbp: number,
+  portalUrl: string
+): string {
+  const formatted = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amountGbp)
+  return emailWrapper(`
+<h2 style="margin:0 0 8px;color:#002147;font-size:22px;font-weight:700;">
+  Commission Payment Processed
+</h2>
+<p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.6;">
+  Hello ${introducerName},
+</p>
+<p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+  We have processed your commission payment for the following period.
+  Please allow 3–5 business days for funds to appear in your account.
+</p>
+<table style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin:20px 0;width:100%;" cellpadding="0" cellspacing="0">
+  <tr><td style="padding:4px 0;color:#166534;font-size:13px;">Investor Account</td><td style="padding:4px 0;color:#166534;font-size:13px;font-weight:600;">${investorName}</td></tr>
+  <tr><td style="padding:4px 0;color:#166534;font-size:13px;">Billing Period</td><td style="padding:4px 0;color:#166534;font-size:13px;font-weight:600;">${periodLabel}</td></tr>
+  <tr><td style="padding:8px 0 4px;color:#166534;font-size:13px;border-top:1px solid #bbf7d0;">Amount Paid</td>
+      <td style="padding:8px 0 4px;color:#166534;font-size:18px;font-weight:700;border-top:1px solid #bbf7d0;">${formatted}</td></tr>
+</table>
+${ctaButton(portalUrl, 'View Earnings in Portal')}
+<p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
+  Questions? Contact us at
+  <a href="mailto:info@xenithcapital.co.uk" style="color:#5FB548;">info@xenithcapital.co.uk</a>
+</p>
+  `)
+}
+
+// ============================================================
+// 14. Support Ticket Response — Introducer  (was 13, renumbered)
 // ============================================================
 export function supportTicketResponseEmail(
   introducerName: string,
