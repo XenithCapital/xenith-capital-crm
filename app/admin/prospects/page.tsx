@@ -69,6 +69,7 @@ export default async function AdminProspectsPage({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/50">
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Ref</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Prospect</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Introducer</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Country</th>
@@ -81,7 +82,7 @@ export default async function AdminProspectsPage({
           <tbody>
             {(filtered?.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
                   No prospects found.
                 </td>
               </tr>
@@ -90,6 +91,15 @@ export default async function AdminProspectsPage({
               const intro = p.introducer as { id: string; full_name: string } | null
               return (
                 <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    {p.prospect_ref ? (
+                      <span className="font-mono text-xs font-semibold text-[#002147] bg-[#002147]/8 px-2 py-1 rounded whitespace-nowrap">
+                        {p.prospect_ref}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <p className="font-medium text-gray-900">{p.full_name}</p>
                     <p className="text-xs text-gray-400">{p.email}</p>

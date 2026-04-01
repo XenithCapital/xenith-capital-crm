@@ -22,7 +22,7 @@ export default function NewProspectPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<{ prospectId: string; fullName: string; email: string } | null>(null)
+  const [success, setSuccess] = useState<{ prospectId: string; fullName: string; email: string; prospectRef: string | null } | null>(null)
 
   function set(key: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
@@ -53,7 +53,12 @@ export default function NewProspectPage() {
       return
     }
 
-    setSuccess({ prospectId: data.prospect.id, fullName: form.fullName, email: form.email })
+    setSuccess({
+      prospectId: data.prospect.id,
+      fullName: form.fullName,
+      email: form.email,
+      prospectRef: data.prospect.prospect_ref ?? null,
+    })
     setLoading(false)
   }
 
@@ -68,6 +73,15 @@ export default function NewProspectPage() {
             </svg>
           </div>
           <h2 className="text-xl font-bold text-[#002147] mb-3">Prospect registered successfully</h2>
+          {success.prospectRef && (
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Reference Number</p>
+              <span className="font-mono text-lg font-bold text-[#002147] bg-[#002147]/8 px-4 py-2 rounded-lg inline-block">
+                {success.prospectRef}
+              </span>
+              <p className="text-xs text-gray-500 mt-1.5">Keep this reference for your records.</p>
+            </div>
+          )}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <p className="text-sm font-semibold text-blue-900 mb-1">Consent email sent</p>
             <p className="text-sm text-blue-800">

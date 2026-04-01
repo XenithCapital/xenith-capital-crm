@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { isSuperAdmin } from '@/lib/auth/permissions'
 
 export async function DELETE(
   _request: NextRequest,
@@ -58,6 +59,10 @@ export async function PATCH(
       .single()
 
     if (profile?.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    if (!isSuperAdmin(user.email)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

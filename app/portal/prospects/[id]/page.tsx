@@ -51,6 +51,14 @@ export default async function PortalProspectDetailPage({
         {/* Prospect details */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="font-bold text-[#002147] mb-4">Details</h2>
+          {prospect.prospect_ref && (
+            <div className="mb-4 pb-4 border-b border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Reference</p>
+              <span className="font-mono text-sm font-bold text-[#002147] bg-[#002147]/8 px-3 py-1.5 rounded-lg inline-block">
+                {prospect.prospect_ref}
+              </span>
+            </div>
+          )}
           <div className="space-y-3 text-sm">
             {[
               { label: 'Full Name', value: prospect.full_name },

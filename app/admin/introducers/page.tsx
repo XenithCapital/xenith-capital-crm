@@ -2,9 +2,12 @@ import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/layout/page-header'
 import Link from 'next/link'
 import { formatDateOnlyLondon, getTierLabel } from '@/lib/utils'
+import { isSuperAdmin } from '@/lib/auth/permissions'
 
 export default async function AdminIntroducersPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const superAdmin = isSuperAdmin(user?.email)
 
   const { data: allIntroducers } = await supabase
     .from('profiles')
@@ -26,6 +29,7 @@ export default async function AdminIntroducersPage() {
 
   const tableHeader = (
     <tr className="border-b border-gray-100 bg-gray-50/50">
+      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Ref</th>
       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</th>
       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tier</th>
@@ -43,15 +47,28 @@ export default async function AdminIntroducersPage() {
         title="Introducers"
         description={`${externalIntroducers.length} external · ${internalIntroducers.length} internal (XC team)`}
         actions={
-          <Link
-            href="/admin/introducers/invite"
-            className="flex items-center gap-2 bg-[#5FB548] hover:bg-[#4ea038] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Invite Introducer
-          </Link>
+          <div className="flex items-center gap-2">
+            {superAdmin && (
+              <Link
+                href="/admin/introducers/new-internal"
+                className="flex items-center gap-2 bg-[#002147] hover:bg-[#001a38] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Team Member
+              </Link>
+            )}
+            <Link
+              href="/admin/introducers/invite"
+              className="flex items-center gap-2 bg-[#5FB548] hover:bg-[#4ea038] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Invite Introducer
+            </Link>
+          </div>
         }
       />
 
@@ -68,6 +85,15 @@ export default async function AdminIntroducersPage() {
               <tbody>
                 {internalIntroducers.map((intro) => (
                   <tr key={intro.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      {intro.introducer_ref ? (
+                        <span className="font-mono text-xs font-semibold text-[#002147] bg-[#002147]/8 px-2 py-1 rounded whitespace-nowrap">
+                          {intro.introducer_ref}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full bg-[#5FB548]/20 flex items-center justify-center flex-shrink-0">
@@ -120,7 +146,7 @@ export default async function AdminIntroducersPage() {
             <tbody>
               {externalIntroducers.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                     No external introducers yet.{' '}
                     <Link href="/admin/introducers/invite" className="text-[#5FB548] hover:underline">
                       Invite one →
@@ -130,6 +156,15 @@ export default async function AdminIntroducersPage() {
               )}
               {externalIntroducers.map((intro) => (
                 <tr key={intro.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    {intro.introducer_ref ? (
+                      <span className="font-mono text-xs font-semibold text-[#002147] bg-[#002147]/8 px-2 py-1 rounded whitespace-nowrap">
+                        {intro.introducer_ref}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">Pending</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-full bg-[#002147]/10 flex items-center justify-center flex-shrink-0">

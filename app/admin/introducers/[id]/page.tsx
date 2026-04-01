@@ -6,6 +6,7 @@ import { formatDateLondon, formatDateOnlyLondon, formatCurrency, getTierLabel } 
 import Link from 'next/link'
 import AgreementDownloadButton from './agreement-download-button'
 import IntroducerStatusActions from './status-actions'
+import { isSuperAdmin } from '@/lib/auth/permissions'
 
 export default async function IntroducerDetailPage({
   params,
@@ -13,6 +14,8 @@ export default async function IntroducerDetailPage({
   params: { id: string }
 }) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const superAdmin = isSuperAdmin(user?.email)
 
   const { data: introducer, error } = await supabase
     .from('profiles')
@@ -51,16 +54,18 @@ export default async function IntroducerDetailPage({
               currentStatus={(introducer.status as 'active' | 'dormant') ?? 'active'}
               introducerName={introducer.full_name}
             />
-            <Link
-              href={`/admin/introducers/${params.id}/edit`}
-              className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#5FB548] hover:bg-[#4ea038] px-4 py-2 rounded-lg transition"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Edit
-            </Link>
+            {superAdmin && (
+              <Link
+                href={`/admin/introducers/${params.id}/edit`}
+                className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#5FB548] hover:bg-[#4ea038] px-4 py-2 rounded-lg transition"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+              </Link>
+            )}
             <Link
               href="/admin/introducers"
               className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 border border-gray-200 rounded-lg transition"
@@ -75,6 +80,14 @@ export default async function IntroducerDetailPage({
         {/* Profile card */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="font-bold text-[#002147] mb-4">Profile</h2>
+          {introducer.introducer_ref && (
+            <div className="mb-4 pb-4 border-b border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Introducer Ref</p>
+              <span className="font-mono text-sm font-bold text-[#002147] bg-[#002147]/8 px-3 py-1.5 rounded-lg inline-block">
+                {introducer.introducer_ref}
+              </span>
+            </div>
+          )}
           <div className="space-y-3">
             {[
               { label: 'Full Name', value: introducer.full_name },

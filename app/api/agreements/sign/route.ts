@@ -124,6 +124,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
     }
 
+    // Assign introducer reference number (idempotent — safe to call on re-sign)
+    const { data: introducerRef, error: refError } = await serviceClient.rpc(
+      'assign_introducer_ref',
+      { p_introducer_id: user.id }
+    )
+    if (refError) {
+      // Non-fatal: log but don't block the signing flow
+      console.error('[sign-agreement] Failed to assign introducer ref:', refError)
+    }
+
     // Write audit log
     await serviceClient.from('audit_log').insert({
       actor_id: user.id,
@@ -134,6 +144,7 @@ export async function POST(request: NextRequest) {
         agreement_version: REQUIRED_AGREEMENT_VERSION,
         ip_address: ipAddress,
         signed_at: signedAt.toISOString(),
+        introducer_ref: introducerRef ?? null,
       },
     })
 

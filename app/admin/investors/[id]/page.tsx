@@ -6,6 +6,8 @@ import { VestingTracker } from '@/components/investors/vesting-tracker'
 import { formatDateLondon, formatDateOnlyLondon, formatCurrency } from '@/lib/utils'
 import Link from 'next/link'
 import InvestorStatusActions from './status-actions'
+import CommissionActions from './commission-actions'
+import type { CommissionStatus } from '@/types/database'
 
 export default async function AdminInvestorDetailPage({
   params,
@@ -26,7 +28,7 @@ export default async function AdminInvestorDetailPage({
 
   if (error || !investor) notFound()
 
-  const [{ data: allocations }, { data: auditLogs }] = await Promise.all([
+  const [{ data: allocations }, { data: auditLogs }, { data: commissions }] = await Promise.all([
     supabase
       .from('investor_allocations')
       .select('*')
@@ -38,6 +40,11 @@ export default async function AdminInvestorDetailPage({
       .eq('target_id', params.id)
       .order('created_at', { ascending: false })
       .limit(20),
+    supabase
+      .from('commissions')
+      .select('*')
+      .eq('investor_id', params.id)
+      .order('created_at', { ascending: false }),
   ])
 
   const intro = investor.introducer as { id: string; full_name: string; email: string } | null
@@ -219,6 +226,77 @@ export default async function AdminInvestorDetailPage({
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Commissions */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-[#002147]">Commission Records</h2>
+              <Link
+                href={`/admin/investors/${params.id}/commissions/new`}
+                className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#5FB548] hover:bg-[#4ea038] px-3 py-1.5 rounded-lg transition"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Log Commission
+              </Link>
+            </div>
+            {(commissions?.length ?? 0) === 0 ? (
+              <p className="text-sm text-gray-400">No commission records yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {commissions?.map((c) => {
+                  const status = c.status as CommissionStatus
+                  const statusStyles: Record<CommissionStatus, string> = {
+                    pending: 'bg-gray-100 text-gray-600',
+                    invoice_requested: 'bg-amber-100 text-amber-700',
+                    invoice_received: 'bg-blue-100 text-blue-700',
+                    paid: 'bg-green-100 text-green-700',
+                    cancelled: 'bg-red-100 text-red-600',
+                  }
+                  const statusLabels: Record<CommissionStatus, string> = {
+                    pending: 'Pending',
+                    invoice_requested: 'Invoice Requested',
+                    invoice_received: 'Invoice Received',
+                    paid: 'Paid',
+                    cancelled: 'Cancelled',
+                  }
+                  return (
+                    <div key={c.id} className="border border-gray-100 rounded-lg p-4 bg-gray-50/40">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">{c.period_label}</p>
+                          <p className="text-lg font-bold text-[#002147]">
+                            {new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(c.amount_gbp)}
+                            {c.commission_rate && (
+                              <span className="ml-1.5 text-xs font-normal text-gray-400">
+                                ({(c.commission_rate * 100).toFixed(0)}%)
+                              </span>
+                            )}
+                          </p>
+                          {c.performance_fee_gbp && (
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              Gross perf. fee: {new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(c.performance_fee_gbp)}
+                            </p>
+                          )}
+                        </div>
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${statusStyles[status]}`}>
+                          {statusLabels[status]}
+                        </span>
+                      </div>
+                      {c.notes && (
+                        <p className="text-xs text-gray-500 mb-2 italic">{c.notes}</p>
+                      )}
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs text-gray-400">{formatDateLondon(c.created_at)}</p>
+                        <CommissionActions commissionId={c.id} status={status} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* Audit */}

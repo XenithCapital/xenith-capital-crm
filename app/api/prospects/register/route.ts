@@ -41,6 +41,80 @@ export async function POST(request: NextRequest) {
 
     const serviceClient = createServiceClient()
 
+    // ── Duplicate detection ─────────────────────────────────────────────────
+    // Block if this email already belongs to an active prospect (any introducer).
+    // "Active" = any status except lost / rejected.
+    const { data: existingByEmail } = await serviceClient
+      .from('prospects')
+      .select('id, prospect_ref, introducer_id, status')
+      .ilike('email', email)
+      .not('status', 'in', '("lost","rejected")')
+      .limit(1)
+      .maybeSingle()
+
+    if (existingByEmail) {
+      await serviceClient.from('audit_log').insert({
+        actor_id: user.id,
+        action: 'prospect.duplicate_blocked',
+        target_type: 'prospect',
+        target_id: existingByEmail.id,
+        metadata: {
+          attempted_by: user.id,
+          attempted_email: email,
+          attempted_name: fullName,
+          match_field: 'email',
+          existing_ref: existingByEmail.prospect_ref ?? null,
+          existing_status: existingByEmail.status,
+          existing_introducer_id: existingByEmail.introducer_id,
+        },
+      })
+      return NextResponse.json(
+        {
+          error:
+            'This contact is already known to us. If you believe this is an error, please contact the Xenith Capital team.',
+          code: 'DUPLICATE_PROSPECT',
+        },
+        { status: 409 }
+      )
+    }
+
+    if (phone) {
+      const { data: existingByPhone } = await serviceClient
+        .from('prospects')
+        .select('id, prospect_ref, introducer_id, status')
+        .eq('phone', phone)
+        .not('status', 'in', '("lost","rejected")')
+        .limit(1)
+        .maybeSingle()
+
+      if (existingByPhone) {
+        await serviceClient.from('audit_log').insert({
+          actor_id: user.id,
+          action: 'prospect.duplicate_blocked',
+          target_type: 'prospect',
+          target_id: existingByPhone.id,
+          metadata: {
+            attempted_by: user.id,
+            attempted_email: email,
+            attempted_name: fullName,
+            match_field: 'phone',
+            existing_ref: existingByPhone.prospect_ref ?? null,
+            existing_status: existingByPhone.status,
+            existing_introducer_id: existingByPhone.introducer_id,
+          },
+        })
+        return NextResponse.json(
+          {
+            error:
+              'This contact is already known to us. If you believe this is an error, please contact the Xenith Capital team.',
+            code: 'DUPLICATE_PROSPECT',
+          },
+          { status: 409 }
+        )
+      }
+    }
+    // ───────────────────────────────────────────────────────────────────────
+
     // Insert prospect with pending_consent status — cooling-off does NOT start yet
     const { data: prospect, error: insertError } = await serviceClient
       .from('prospects')
@@ -81,6 +155,7 @@ export async function POST(request: NextRequest) {
         email,
         country,
         status: 'pending_consent',
+        prospect_ref: prospect.prospect_ref ?? null,
       },
     })
 

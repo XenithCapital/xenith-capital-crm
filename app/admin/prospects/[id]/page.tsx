@@ -55,6 +55,16 @@ export default async function AdminProspectDetailPage({
                 Create Investor Record
               </Link>
             )}
+            <Link
+              href={`/admin/prospects/${prospect.id}/edit`}
+              className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#002147] hover:bg-[#001a38] px-4 py-2 rounded-lg transition"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            </Link>
             <DeleteProspectButton prospectId={prospect.id} prospectName={prospect.full_name} />
             <Link href="/admin/prospects" className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 border border-gray-200 rounded-lg transition">
               ← Back
@@ -67,6 +77,14 @@ export default async function AdminProspectDetailPage({
         {/* Prospect info */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="font-bold text-[#002147] mb-4">Prospect Details</h2>
+          {prospect.prospect_ref && (
+            <div className="mb-4 pb-4 border-b border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Reference</p>
+              <span className="font-mono text-sm font-bold text-[#002147] bg-[#002147]/8 px-3 py-1.5 rounded-lg inline-block">
+                {prospect.prospect_ref}
+              </span>
+            </div>
+          )}
           <div className="space-y-3">
             {[
               { label: 'Full Name', value: prospect.full_name },

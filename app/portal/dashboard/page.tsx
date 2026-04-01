@@ -52,6 +52,16 @@ export default async function PortalDashboardPage() {
       <PageHeader
         title={`Welcome back, ${profile?.full_name?.split(' ')[0] ?? 'there'}`}
         description={`Introducer Portal · ${getTierLabel(profile?.tier ?? 'tier_1')}`}
+        actions={
+          profile?.introducer_ref ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400 font-medium">Your ref:</span>
+              <span className="font-mono text-sm font-bold text-[#002147] bg-[#002147]/8 px-3 py-1.5 rounded-lg">
+                {profile.introducer_ref}
+              </span>
+            </div>
+          ) : undefined
+        }
       />
 
       <div className="grid grid-cols-3 gap-4 mb-8">

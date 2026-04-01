@@ -21,6 +21,7 @@ export type ReferralRewardStatus = 'pending' | 'vested' | 'paid' | 'forfeited'
 export type InvestorStrategy = 'XQS' | 'XNS' | 'XXS'
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
 export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent'
+export type CommissionStatus = 'pending' | 'invoice_requested' | 'invoice_received' | 'paid' | 'cancelled'
 
 export interface Profile {
   id: string
@@ -34,6 +35,8 @@ export interface Profile {
   signed_agreement_version: string | null
   is_internal: boolean
   tier: IntroducerTier
+  /** Structured reference number e.g. XC-111. Assigned when agreement is signed. */
+  introducer_ref: string | null
   created_at: string
   updated_at: string
 }
@@ -78,6 +81,8 @@ export interface Prospect {
   country: string | null
   source_note: string | null
   status: ProspectStatus
+  /** Structured reference e.g. XC-111-10001. Auto-generated on insert. Follows the record for life. */
+  prospect_ref: string | null
   cooling_off_started_at: string | null
   cooling_off_completed_at: string | null
   consent_token: string | null
@@ -140,6 +145,27 @@ export interface SupportTicket {
   updated_at: string
   // Joined
   raiser?: Profile
+}
+
+export interface Commission {
+  id: string
+  investor_id: string
+  introducer_id: string
+  period_label: string
+  amount_gbp: number
+  performance_fee_gbp: number | null
+  commission_rate: number | null
+  status: CommissionStatus
+  invoice_requested_at: string | null
+  invoice_received_at: string | null
+  paid_at: string | null
+  notes: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  // Joined
+  investor?: Investor
+  introducer?: Profile
 }
 
 export interface AuditLog {

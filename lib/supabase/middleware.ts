@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
 import { REQUIRED_AGREEMENT_VERSION } from '@/lib/agreement/config'
+import { isSuperAdmin, SUPER_ADMIN_ONLY_ROUTES, SUPER_ADMIN_ONLY_PATTERNS } from '@/lib/auth/permissions'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -105,6 +106,19 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/unauthorised'
     return NextResponse.redirect(url)
+  }
+
+  // Super-admin-only route protection (admin role but wrong email)
+  if (role === 'admin') {
+    const isSuperAdminRoute =
+      SUPER_ADMIN_ONLY_ROUTES.some((r) => pathname.startsWith(r)) ||
+      SUPER_ADMIN_ONLY_PATTERNS.some((p) => p.test(pathname))
+
+    if (isSuperAdminRoute && !isSuperAdmin(user.email)) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/unauthorised'
+      return NextResponse.redirect(url)
+    }
   }
 
   if (pathname.startsWith('/portal') && role !== 'introducer') {
