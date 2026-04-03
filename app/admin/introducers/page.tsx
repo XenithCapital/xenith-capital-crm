@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/layout/page-header'
 import Link from 'next/link'
-import { formatDateOnlyLondon, getTierLabel } from '@/lib/utils'
+import { formatDateOnlyLondon, getTierLabel, formatCurrency } from '@/lib/utils'
 import { isSuperAdmin } from '@/lib/auth/permissions'
 
 export default async function AdminIntroducersPage() {
@@ -15,14 +15,18 @@ export default async function AdminIntroducersPage() {
     .eq('role', 'introducer')
     .order('created_at', { ascending: false })
 
-  // Get prospect and investor counts per introducer
+  // Get prospect and investor counts + AUM per introducer
   const { data: prospectCounts } = await supabase.from('prospects').select('introducer_id')
-  const { data: investorCounts } = await supabase.from('investors').select('introducer_id')
+  const { data: investorData } = await supabase.from('investors').select('introducer_id, funded_amount_usd, status')
 
   const prospectMap: Record<string, number> = {}
   const investorMap: Record<string, number> = {}
+  const aumMap: Record<string, number> = {}
   for (const p of prospectCounts ?? []) prospectMap[p.introducer_id] = (prospectMap[p.introducer_id] ?? 0) + 1
-  for (const i of investorCounts ?? []) investorMap[i.introducer_id] = (investorMap[i.introducer_id] ?? 0) + 1
+  for (const i of investorData ?? []) {
+    investorMap[i.introducer_id] = (investorMap[i.introducer_id] ?? 0) + 1
+    if (i.status === 'active') aumMap[i.introducer_id] = (aumMap[i.introducer_id] ?? 0) + (i.funded_amount_usd ?? 0)
+  }
 
   const internalIntroducers = (allIntroducers ?? []).filter((i) => i.is_internal)
   const externalIntroducers = (allIntroducers ?? []).filter((i) => !i.is_internal)
@@ -35,6 +39,7 @@ export default async function AdminIntroducersPage() {
       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tier</th>
       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Prospects</th>
       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Investors</th>
+      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Total AUM</th>
       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Agreement</th>
       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Joined</th>
       <th className="px-4 py-3"></th>
@@ -117,6 +122,7 @@ export default async function AdminIntroducersPage() {
                     </td>
                     <td className="px-4 py-3 font-medium text-gray-700">{prospectMap[intro.id] ?? 0}</td>
                     <td className="px-4 py-3 font-medium text-gray-700">{investorMap[intro.id] ?? 0}</td>
+                    <td className="px-4 py-3 font-medium text-gray-700">{aumMap[intro.id] ? formatCurrency(aumMap[intro.id]) : <span className="text-gray-400">—</span>}</td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-gray-400 italic">N/A</span>
                     </td>
@@ -146,7 +152,7 @@ export default async function AdminIntroducersPage() {
             <tbody>
               {externalIntroducers.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={10} className="px-4 py-12 text-center text-gray-400">
                     No external introducers yet.{' '}
                     <Link href="/admin/introducers/invite" className="text-[#5FB548] hover:underline">
                       Invite one →
@@ -188,6 +194,7 @@ export default async function AdminIntroducersPage() {
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-700">{prospectMap[intro.id] ?? 0}</td>
                   <td className="px-4 py-3 font-medium text-gray-700">{investorMap[intro.id] ?? 0}</td>
+                  <td className="px-4 py-3 font-medium text-gray-700">{aumMap[intro.id] ? formatCurrency(aumMap[intro.id]) : <span className="text-gray-400">—</span>}</td>
                   <td className="px-4 py-3">
                     {intro.agreement_signed ? (
                       <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Signed</span>

@@ -42,6 +42,10 @@ export default async function IntroducerDetailPage({
     supabase.from('audit_log').select('*').eq('actor_id', params.id).order('created_at', { ascending: false }).limit(20),
   ])
 
+  const totalAum = (investors ?? [])
+    .filter((inv) => inv.status === 'active')
+    .reduce((sum, inv) => sum + (inv.funded_amount_usd ?? 0), 0)
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -159,7 +163,17 @@ export default async function IntroducerDetailPage({
       {/* Investors */}
       {(investors?.length ?? 0) > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="font-bold text-[#002147] mb-4">Investors ({investors?.length})</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-[#002147]">Investors ({investors?.length})</h2>
+            {totalAum > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">Total AUM</span>
+                <span className="text-sm font-bold text-[#002147] bg-[#002147]/8 px-3 py-1 rounded-lg">
+                  {formatCurrency(totalAum)}
+                </span>
+              </div>
+            )}
+          </div>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100">
