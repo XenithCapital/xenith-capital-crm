@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, commission })
   } catch (error) {
-    console.error('[commissions/POST] Error:', error)
+    console.error('[commissions/POST] Error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

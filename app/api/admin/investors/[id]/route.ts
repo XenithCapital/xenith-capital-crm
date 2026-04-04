@@ -90,7 +90,7 @@ export async function PATCH(
       .eq('id', params.id)
 
     if (updateError) {
-      console.error('[edit-investor] Update error:', updateError)
+      console.error('[edit-investor] Update error:', updateError?.message)
       return NextResponse.json({ error: 'Failed to update investor' }, { status: 500 })
     }
 
@@ -151,7 +151,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[edit-investor] Unexpected error:', error)
+    console.error('[edit-investor] Unexpected error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

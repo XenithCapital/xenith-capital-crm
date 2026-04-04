@@ -5,9 +5,20 @@ import {
   prospectConsentRequestEmail,
   prospectSelfRegisteredEmail,
 } from '@/lib/email/templates'
+import { rateLimit } from '@/lib/rate-limit'
 
 // Public endpoint — no auth required. Prospect self-registers via introducer link.
 export async function POST(request: NextRequest) {
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    request.headers.get('x-real-ip') ??
+    'unknown'
+
+  // 10 registrations per IP per hour
+  if (!rateLimit(`self-register:${ip}`, 10, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
+  }
+
   try {
     const { introducerId, fullName, email, phone, country } = await request.json()
 
@@ -120,7 +131,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError || !prospect) {
-      console.error('[self-register]', insertError)
+      console.error('[self-register]', insertError?.message)
       return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
     }
 
@@ -162,7 +173,7 @@ export async function POST(request: NextRequest) {
       prospectId: prospect.id,
     })
   } catch (err) {
-    console.error('[self-register] Unexpected:', err)
+    console.error('[self-register] Unexpected:', err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

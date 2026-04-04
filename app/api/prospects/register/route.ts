@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError || !prospect) {
-      console.error('[register-prospect] Insert error:', insertError)
+      console.error('[register-prospect] Insert error:', insertError?.message)
       return NextResponse.json({ error: 'Failed to register prospect' }, { status: 500 })
     }
 
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, prospect })
   } catch (error) {
-    console.error('[register-prospect] Unexpected error:', error)
+    console.error('[register-prospect] Unexpected error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, ticket })
   } catch (error) {
-    console.error('[create-ticket] Error:', error)
+    console.error('[create-ticket] Error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -132,7 +132,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, ticket })
   } catch (error) {
-    console.error('[update-ticket] Error:', error)
+    console.error('[update-ticket] Error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

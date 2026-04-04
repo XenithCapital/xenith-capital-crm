@@ -77,7 +77,7 @@ export async function PATCH(
       .eq('id', params.id)
 
     if (updateError) {
-      console.error('[admin/prospects/patch]', updateError)
+      console.error('[admin/prospects/patch]', updateError?.message)
       return NextResponse.json({ error: 'Failed to update prospect' }, { status: 500 })
     }
 
@@ -108,7 +108,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('[admin/prospects/patch] Unexpected:', err)
+    console.error('[admin/prospects/patch] Unexpected:', err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -161,7 +161,7 @@ export async function DELETE(
       .eq('id', params.id)
 
     if (deleteError) {
-      console.error('[admin/prospects/delete]', deleteError)
+      console.error('[admin/prospects/delete]', deleteError?.message)
       return NextResponse.json({ error: 'Failed to delete prospect' }, { status: 500 })
     }
 
@@ -176,7 +176,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('[admin/prospects/delete] Unexpected:', err)
+    console.error('[admin/prospects/delete] Unexpected:', err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

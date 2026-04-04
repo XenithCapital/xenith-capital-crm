@@ -150,7 +150,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, newStatus })
   } catch (error) {
-    console.error('[commissions/PATCH] Error:', error)
+    console.error('[commissions/PATCH] Error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

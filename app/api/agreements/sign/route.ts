@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         agreementVersion: REQUIRED_AGREEMENT_VERSION,
       })
     } catch (pdfError) {
-      console.error('[sign-agreement] PDF generation error:', pdfError)
+      console.error('[sign-agreement] PDF generation error:', pdfError instanceof Error ? pdfError.message : String(pdfError))
       return NextResponse.json({ error: 'Failed to generate agreement PDF' }, { status: 500 })
     }
 
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       })
 
     if (uploadError) {
-      console.error('[sign-agreement] Upload error:', uploadError)
+      console.error('[sign-agreement] Upload error:', uploadError?.message)
       return NextResponse.json({ error: 'Failed to upload agreement PDF' }, { status: 500 })
     }
 
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, recordId })
   } catch (error) {
-    console.error('[sign-agreement] Unexpected error:', error)
+    console.error('[sign-agreement] Unexpected error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

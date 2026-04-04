@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       .lte('cooling_off_completed_at', now)
 
     if (fetchError) {
-      console.error('[cron/cooling-off] Fetch error:', fetchError)
+      console.error('[cron/cooling-off] Fetch error:', fetchError?.message)
       return NextResponse.json({ error: 'Failed to fetch prospects' }, { status: 500 })
     }
 
@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
       errors: errors.length > 0 ? errors : undefined,
     })
   } catch (error) {
-    console.error('[cron/cooling-off] Unexpected error:', error)
+    console.error('[cron/cooling-off] Unexpected error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

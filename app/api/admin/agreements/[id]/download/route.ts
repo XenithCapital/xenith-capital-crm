@@ -48,7 +48,7 @@ export async function GET(
 
     return NextResponse.json({ url: signedUrl.signedUrl })
   } catch (error) {
-    console.error('[download-agreement] Error:', error)
+    console.error('[download-agreement] Error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

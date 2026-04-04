@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError || !profile) {
-      console.error('[internal-member] Insert error:', insertError)
+      console.error('[internal-member] Insert error:', insertError?.message)
       return NextResponse.json(
         { error: 'Failed to create team member' },
         { status: 500 }
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, profile })
   } catch (err) {
-    console.error('[internal-member] Unexpected error:', err)
+    console.error('[internal-member] Unexpected error:', err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

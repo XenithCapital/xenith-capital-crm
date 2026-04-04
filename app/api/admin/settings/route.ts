@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
+const ALLOWED_SETTING_KEYS = [
+  'cooling_off_hours',
+  'agreement_version',
+  'agreement_content',
+  'commission_rate_default',
+  'commission_payment_terms',
+  'platform_name',
+  'support_email',
+  'compliance_email',
+] as const
+
+type AllowedSettingKey = (typeof ALLOWED_SETTING_KEYS)[number]
+
+function isAllowedKey(key: string): key is AllowedSettingKey {
+  return (ALLOWED_SETTING_KEYS as readonly string[]).includes(key)
+}
+
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = await createClient()
@@ -23,6 +40,10 @@ export async function PATCH(request: NextRequest) {
     const { key, value } = await request.json()
     if (!key || !value) {
       return NextResponse.json({ error: 'key and value required' }, { status: 400 })
+    }
+
+    if (!isAllowedKey(key)) {
+      return NextResponse.json({ error: `Invalid setting key. Allowed keys: ${ALLOWED_SETTING_KEYS.join(', ')}` }, { status: 400 })
     }
 
     const serviceClient = createServiceClient()

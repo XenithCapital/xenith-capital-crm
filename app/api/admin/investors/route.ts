@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError || !investor) {
-      console.error('[create-investor] Error:', insertError)
+      console.error('[create-investor] Error:', insertError?.message)
       return NextResponse.json({ error: 'Failed to create investor' }, { status: 500 })
     }
 
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
           .from('investor_allocations')
           .insert(allocRows)
         if (allocError) {
-          console.error('[create-investor] Allocations insert error:', allocError)
+          console.error('[create-investor] Allocations insert error:', allocError?.message)
           // Don't fail the whole request — investor was created, allocations can be added later
         }
       }
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, investor })
   } catch (error) {
-    console.error('[create-investor] Unexpected error:', error)
+    console.error('[create-investor] Unexpected error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -4,8 +4,19 @@ import { generateConsentPdf } from '@/lib/pdf/generate-consent'
 import { sendEmail } from '@/lib/email/resend'
 import { prospectConsentConfirmedEmail } from '@/lib/email/templates'
 import { formatDateLondon } from '@/lib/utils'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    request.headers.get('x-real-ip') ??
+    'unknown'
+
+  // 5 consent submissions per IP per 15 minutes
+  if (!rateLimit(`consent:${ip}`, 5, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
+  }
+
   try {
     const { token, fullNameTyped } = await request.json()
 
@@ -65,7 +76,7 @@ export async function POST(request: NextRequest) {
         recordId:       prospect.id,
       })
     } catch (pdfErr) {
-      console.error('[prospect/consent] PDF error:', pdfErr)
+      console.error('[prospect/consent] PDF error:', pdfErr instanceof Error ? pdfErr.message : String(pdfErr))
       return NextResponse.json({ error: 'Failed to generate consent record' }, { status: 500 })
     }
 
@@ -76,7 +87,7 @@ export async function POST(request: NextRequest) {
       .upload(pdfPath, pdfBytes, { contentType: 'application/pdf', upsert: false })
 
     if (uploadError) {
-      console.error('[prospect/consent] Upload error:', uploadError)
+      console.error('[prospect/consent] Upload error:', uploadError?.message)
       return NextResponse.json({ error: 'Failed to store consent record' }, { status: 500 })
     }
 
@@ -94,7 +105,7 @@ export async function POST(request: NextRequest) {
       .eq('id', prospect.id)
 
     if (updateError) {
-      console.error('[prospect/consent] Update error:', updateError)
+      console.error('[prospect/consent] Update error:', updateError?.message)
       return NextResponse.json({ error: 'Failed to start cooling-off period' }, { status: 500 })
     }
 
@@ -142,7 +153,7 @@ export async function POST(request: NextRequest) {
       coolingOffEndsAt: coolingOffEnds.toISOString(),
     })
   } catch (err) {
-    console.error('[prospect/consent] Unexpected error:', err)
+    console.error('[prospect/consent] Unexpected error:', err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

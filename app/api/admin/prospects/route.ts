@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError || !prospect) {
-      console.error('[admin-create-prospect]', insertError)
+      console.error('[admin-create-prospect]', insertError?.message)
       return NextResponse.json({ error: 'Failed to create prospect' }, { status: 500 })
     }
 
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, prospect })
   } catch (error) {
-    console.error('[admin-create-prospect] Unexpected:', error)
+    console.error('[admin-create-prospect] Unexpected:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

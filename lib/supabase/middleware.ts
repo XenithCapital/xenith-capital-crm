@@ -4,7 +4,36 @@ import type { Database } from '@/types/database'
 import { REQUIRED_AGREEMENT_VERSION } from '@/lib/agreement/config'
 import { isSuperAdmin, SUPER_ADMIN_ONLY_ROUTES, SUPER_ADMIN_ONLY_PATTERNS } from '@/lib/auth/permissions'
 
+const MUTATING_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE'])
+
+function csrfCheck(request: NextRequest): NextResponse | null {
+  const { pathname, method } = request.nextUrl
+
+  // Only check mutating requests to API routes
+  if (!pathname.startsWith('/api/') || !MUTATING_METHODS.has(method)) return null
+
+  // CRON and server-to-server calls use Bearer token — exempt from CSRF
+  const authHeader = request.headers.get('authorization') ?? ''
+  if (authHeader.startsWith('Bearer ')) return null
+
+  const origin = request.headers.get('origin')
+  // If no Origin header, this is a same-origin or server-side request — allow
+  if (!origin) return null
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://partners.xenithcapital.co.uk'
+  const allowedOrigin = new URL(appUrl).origin
+
+  if (origin !== allowedOrigin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  return null
+}
+
 export async function updateSession(request: NextRequest) {
+  const csrfError = csrfCheck(request)
+  if (csrfError) return csrfError
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient<Database>(
